@@ -69,3 +69,40 @@ Parser asagidaki sinyallere gore havayolunu belirler:
 - `samples/pegasus_ticket_masked.txt`
 - `samples/thy_ticket_masked.txt`
 - `samples/ocr_ticket.png`
+
+## Sprint 3 Test Adimlari (Transfer Engine + Transfers API)
+
+1. Servisleri ayağa kaldırın:
+
+```bash
+docker compose up --build -d
+```
+
+2. Örnek bir bilet dosyası yükleyin:
+
+```bash
+curl -X POST "http://localhost:8000/upload" ^
+  -H "accept: application/json" ^
+  -H "Content-Type: multipart/form-data" ^
+  -F "file=@C:/path/samples/ocr_ticket.png"
+```
+
+3. Upload işlenene kadar bekleyip kontrol edin:
+
+```bash
+curl http://localhost:8000/uploads/{id}
+```
+
+4. Transfer kayıtlarını listeleyin:
+
+```bash
+curl http://localhost:8000/transfers
+```
+
+5. Filtre örnekleri:
+
+```bash
+curl "http://localhost:8000/transfers?status=unassigned"
+curl "http://localhost:8000/transfers?airline=ajet"
+curl "http://localhost:8000/transfers?needs_review=true"
+```

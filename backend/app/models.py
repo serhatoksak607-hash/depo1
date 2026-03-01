@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, func
 
 from .db import Base
 
@@ -45,9 +45,18 @@ class Transfer(Base):
     __tablename__ = "transfers"
 
     id = Column(Integer, primary_key=True, index=True)
-    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=False, index=True)
-    pickup_location = Column(String(255), nullable=False)
-    dropoff_location = Column(String(255), nullable=False)
-    pickup_time = Column(DateTime(timezone=True), nullable=False)
-    status = Column(String(50), nullable=False, default="pending")
+    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=True, index=True)
+    upload_id = Column(Integer, ForeignKey("uploads.id"), nullable=True, index=True, unique=True)
+    airline = Column(String(32), nullable=False, default="unknown")
+    passenger_name = Column(String(255), nullable=True)
+    pnr = Column(String(16), nullable=True, index=True)
+    flight_no = Column(String(16), nullable=True, index=True)
+    flight_date = Column(String(10), nullable=True)
+    flight_time = Column(String(5), nullable=True)
+    pickup_location = Column(String(255), nullable=True)
+    dropoff_location = Column(String(255), nullable=True)
+    status = Column(String(50), nullable=False, default="unassigned")
+    confidence = Column(Float, nullable=True)
+    needs_review = Column(Boolean, nullable=False, default=True)
+    raw_parse = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

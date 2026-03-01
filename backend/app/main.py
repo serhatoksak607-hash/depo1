@@ -4,12 +4,13 @@ from pathlib import Path
 
 import redis
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Query
 from rq import Queue
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from .db import Base, SessionLocal, engine
-from .models import Upload
+from .models import Transfer, Upload
 
 
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".zip"}
@@ -47,6 +48,62 @@ def startup_event():
         )
         conn.execute(
             text("ALTER TABLE uploads ADD COLUMN IF NOT EXISTS error_message TEXT")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS upload_id INTEGER")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS airline VARCHAR(32) NOT NULL DEFAULT 'unknown'")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS passenger_name VARCHAR(255)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS pnr VARCHAR(16)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS flight_no VARCHAR(16)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS flight_date VARCHAR(10)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS flight_time VARCHAR(5)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS confidence DOUBLE PRECISION")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS needs_review BOOLEAN NOT NULL DEFAULT TRUE")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS raw_parse JSONB")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ALTER COLUMN ticket_id DROP NOT NULL")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ALTER COLUMN pickup_location DROP NOT NULL")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ALTER COLUMN dropoff_location DROP NOT NULL")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ALTER COLUMN pickup_time DROP NOT NULL")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'unassigned'")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ALTER COLUMN status SET DEFAULT 'unassigned'")
+        )
+        conn.execute(
+            text("UPDATE transfers SET status = 'unassigned' WHERE status = 'pending' OR status IS NULL")
+        )
+        conn.execute(
+            text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS ix_transfers_upload_id ON transfers (upload_id)"
+            )
         )
 
 
@@ -130,3 +187,48 @@ def get_upload(upload_id: int, db: Session = Depends(get_db)):
         "error_message": upload.error_message,
         "created_at": upload.created_at,
     }
+
+
+@app.get("/transfers")
+def list_transfers(
+    status: str | None = Query(default=None),
+    airline: str | None = Query(default=None),
+    needs_review: bool | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    query = db.query(Transfer)
+    if status:
+        query = query.filter(Transfer.status == status)
+    if airline:
+        query = query.filter(Transfer.airline == airline.lower())
+    if needs_review is not None:
+        query = query.filter(Transfer.needs_review == needs_review)
+
+    items = query.order_by(Transfer.created_at.desc()).all()
+
+    color_map = {
+        "unassigned": "red",
+        "planned": "yellow",
+        "completed": "green",
+    }
+
+    return [
+        {
+            "id": transfer.id,
+            "upload_id": transfer.upload_id,
+            "airline": transfer.airline,
+            "passenger_name": transfer.passenger_name,
+            "pnr": transfer.pnr,
+            "flight_no": transfer.flight_no,
+            "date": transfer.flight_date,
+            "time": transfer.flight_time,
+            "from": transfer.pickup_location,
+            "to": transfer.dropoff_location,
+            "status": transfer.status,
+            "status_color": color_map.get(transfer.status, "red"),
+            "confidence": transfer.confidence,
+            "needs_review": transfer.needs_review,
+            "created_at": transfer.created_at,
+        }
+        for transfer in items
+    ]

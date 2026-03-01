@@ -7,7 +7,7 @@ from PIL import Image
 from pypdf import PdfReader
 
 from .db import SessionLocal
-from .models import Upload
+from .models import Transfer, Upload
 from .parser import parse_ticket_text
 
 
@@ -59,6 +59,33 @@ def _extract_text(file_path: Path) -> tuple[str, str]:
     raise ValueError(f"Unsupported extension for extraction: {suffix}")
 
 
+def _create_or_update_transfer(
+    upload_id: int,
+    parsed_payload: dict,
+    confidence: float,
+    needs_review: bool,
+    db,
+) -> None:
+    parsed = parsed_payload or {}
+    transfer = db.query(Transfer).filter(Transfer.upload_id == upload_id).first()
+    if not transfer:
+        transfer = Transfer(upload_id=upload_id)
+        db.add(transfer)
+
+    transfer.airline = (parsed.get("airline") or "unknown").lower()
+    transfer.passenger_name = parsed.get("passenger_name")
+    transfer.pnr = parsed.get("pnr")
+    transfer.flight_no = parsed.get("flight_no")
+    transfer.flight_date = parsed.get("date")
+    transfer.flight_time = parsed.get("time")
+    transfer.pickup_location = parsed.get("from")
+    transfer.dropoff_location = parsed.get("to")
+    transfer.status = transfer.status or "unassigned"
+    transfer.confidence = confidence
+    transfer.needs_review = needs_review
+    transfer.raw_parse = parsed_payload
+
+
 def process_upload(upload_id: int) -> None:
     db = SessionLocal()
     try:
@@ -86,10 +113,21 @@ def process_upload(upload_id: int) -> None:
                 "confidence": parsed_result["confidence"],
                 "needs_review": parsed_result["needs_review"],
             }
+            _create_or_update_transfer(
+                upload_id=upload.id,
+                parsed_payload=parsed_result["parsed"],
+                confidence=parsed_result["confidence"],
+                needs_review=parsed_result["needs_review"],
+                db=db,
+            )
             upload.status = "processed"
             upload.error_message = None
             db.commit()
         except Exception as exc:
+            db.rollback()
+            upload = db.query(Upload).filter(Upload.id == upload_id).first()
+            if not upload:
+                return
             upload.status = "failed"
             upload.error_message = str(exc)
             db.commit()
