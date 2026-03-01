@@ -5,4 +5,8 @@ psycopg2-binary==2.9.10
 redis==5.2.1
 rq==1.16.2
 pypdf==5.4.0
+pytesseract==0.3.13
+Pillow==11.2.1
+PyMuPDF==1.26.0
+pytest==8.3.5
 python-multipart==0.0.20

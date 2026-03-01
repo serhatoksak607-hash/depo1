@@ -20,27 +20,37 @@ docker compose up --build -d
 curl http://localhost:8000/health
 ```
 
-## Sprint 1 Test Adimlari (Upload Processing Pipeline)
+## Sprint 2 Test Adimlari (Real OCR + Parser v0)
 
-1. Upload gonderin:
+1. Parser unit testlerini calistirin:
+
+```bash
+docker compose exec backend python -m pytest -q
+```
+
+2. Samples altindaki maskeli bir dosyayi upload edin:
 
 ```bash
 curl -X POST "http://localhost:8000/upload" ^
   -H "accept: application/json" ^
   -H "Content-Type: multipart/form-data" ^
-  -F "file=@C:/path/ornek.pdf"
+  -F "file=@C:/path/samples/ocr_ticket.png"
 ```
 
-2. Cevaptan `id` degerini alin ve kaydi sorgulayin:
+3. Cevaptan `id` degerini alin ve kaydi sorgulayin:
 
 ```bash
 curl http://localhost:8000/uploads/{id}
 ```
 
-3. Beklenen durum:
+4. Beklenen durum:
 
 - Ilk anda `status: "pending"` gelebilir.
 - Worker isledikten sonra `status: "processed"` olur.
 - `parse_result` alani su formatta dolar:
-  `{"raw_text":"...","method":"pdf_text"}` veya
-  `{"raw_text":"OCR_NOT_IMPLEMENTED","method":"ocr_placeholder"}`.
+  `{"method":"pdf_text|ocr","raw_text":"...","parsed":{...},"confidence":0-1,"needs_review":true|false}`.
+
+## Sample Veriler
+
+- `samples/thy_ticket_masked.txt`
+- `samples/ocr_ticket.png`
