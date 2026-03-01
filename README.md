@@ -50,7 +50,22 @@ curl http://localhost:8000/uploads/{id}
 - `parse_result` alani su formatta dolar:
   `{"method":"pdf_text|ocr","raw_text":"...","parsed":{...},"confidence":0-1,"needs_review":true|false}`.
 
+## Airline Detection Sirasi
+
+Parser asagidaki sinyallere gore havayolunu belirler:
+
+1. Marka adi: `AJET/ANADOLUJET`, `SUNEXPRESS`, `PEGASUS`, `TURKISH AIRLINES/THY`
+2. Ucus kodu:
+   - `VF` -> `ajet`
+   - `XQ` -> `sunexpress`
+   - `PC` -> `pegasus`
+   - `TK` -> `thy`
+3. Hicbiri yoksa `unknown`
+
 ## Sample Veriler
 
+- `samples/ajet_ticket_masked.txt`
+- `samples/sunexpress_ticket_masked.txt`
+- `samples/pegasus_ticket_masked.txt`
 - `samples/thy_ticket_masked.txt`
 - `samples/ocr_ticket.png`
