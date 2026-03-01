@@ -115,6 +115,36 @@ Aşağıdaki kapsam, ilettiğiniz 5 ana modülü temel alır ve birbirleriyle en
 - “İlk varış havalimanı” seçim ekranı mutlaka manuel doğrulama içersin.
 - Otomatik eşleşmede güven skoru üretin; düşük skorluları insan onayına düşürün.
 
+### Öncelik kararı: Transfer ile başlama
+Evet, önce transfer modülü ile başlamak mantıklı. Çünkü etkinlik öncesi en kritik operasyonlardan biri
+katılımcıların doğru zamanda ve doğru havalimanından alınmasıdır. Transfer modülü ilk kurulduğunda:
+- Operasyon ekibi en hızlı günlük faydayı görür,
+- Uçuş verileri erken standardize olur,
+- Sonraki kayıt/konaklama/finans entegrasyonları daha temiz ilerler.
+
+### Transfer Modülü MVP kapsamı (ilk sprintler)
+1. **Dosya yükleme ve ayrıştırma altyapısı**
+   - ZIP/PDF/JPG/PNG kabulü
+   - ZIP içeriğinin otomatik açılması
+2. **Belge okuma katmanı**
+   - PDF text extraction
+   - OCR fallback
+3. **Havayolu ve şablon tespiti**
+   - AJet, Pegasus, SunExpress, THY
+4. **Segment çıkarımı**
+   - Yolcu adı, PNR, uçuş no, tarih/saat, kalkış/varış
+   - Tek yön / gidiş-dönüş / aktarmalı ayrımı
+5. **Manuel doğrulama ekranı**
+   - Düşük güven skoru kayıtlarını operasyona düşürme
+   - “İlk varış havalimanı” seçimi
+6. **Transfer listesi üretimi**
+   - `ad_soyad_gidiş`, `ad_soyad_dönüş`, `ad_soyad_gidiş&dönüş`, `ad_soyad_aktarma`
+
+### MVP sonrası (faz 2)
+- Kayıt modülü ile kişi eşleştirme otomasyonu
+- Konaklama modülü ile otel bazlı shuttle planı
+- Finans modülü ile transfer maliyeti/sponsor dağıtımı
+
 ---
 
 ## 5) Muhasebe ve Finans Modülü
@@ -171,11 +201,11 @@ Aşağıdaki kapsam, ilettiğiniz 5 ana modülü temel alır ve birbirleriyle en
 
 ## Yol Haritası (Pratik)
 
-1. **Faz 1 (MVP):** Kayıt + QR + temel toplantı erişimi
-2. **Faz 2:** Konaklama + sponsor/faturalama kuralları
-3. **Faz 3:** Transfer OCR + manuel doğrulama ekranı
+1. **Faz 1 (MVP):** Transfer modülü (yükleme + OCR/text extraction + parser + manuel doğrulama + transfer listesi)
+2. **Faz 2:** Kayıt + QR + transfer-katılımcı eşleştirme
+3. **Faz 3:** Konaklama + sponsor/faturalama kuralları
 4. **Faz 4:** Muhasebe mutabakat + proforma + e-posta
-5. **Faz 5:** Excel adaptörü ve gelişmiş entegrasyonlar
+5. **Faz 5:** Excel adaptörü ve gelişmiş entegrasyonlar + toplantı alt modülleri (quiz/sertifika)
 
 ---
 
