@@ -10,7 +10,8 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from .db import Base, SessionLocal, engine
-from .models import Transfer, Upload
+from .models import OpsEvent, Transfer, Upload
+from .ops_events import ALLOWED_OPS_EVENT_TYPES
 
 
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".zip"}
@@ -103,6 +104,12 @@ def startup_event():
         conn.execute(
             text(
                 "CREATE UNIQUE INDEX IF NOT EXISTS ix_transfers_upload_id ON transfers (upload_id)"
+            )
+        )
+        conn.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_ops_events_scope_created "
+                "ON ops_events (tenant_id, event_id, created_at DESC)"
             )
         )
 
@@ -231,4 +238,47 @@ def list_transfers(
             "created_at": transfer.created_at,
         }
         for transfer in items
+    ]
+
+
+@app.get("/ops-events")
+def list_ops_events(
+    tenant_id: str | None = Query(default=None),
+    event_id: str | None = Query(default=None),
+    event_type: str | None = Query(default=None),
+    related_transfer_id: int | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = db.query(OpsEvent)
+    if tenant_id:
+        query = query.filter(OpsEvent.tenant_id == tenant_id)
+    if event_id:
+        query = query.filter(OpsEvent.event_id == event_id)
+    if event_type:
+        if event_type not in ALLOWED_OPS_EVENT_TYPES:
+            raise HTTPException(status_code=400, detail="Invalid event_type")
+        query = query.filter(OpsEvent.event_type == event_type)
+    if related_transfer_id is not None:
+        query = query.filter(OpsEvent.related_transfer_id == related_transfer_id)
+
+    rows = (
+        query.order_by(OpsEvent.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        {
+            "id": row.id,
+            "tenant_id": row.tenant_id,
+            "event_id": row.event_id,
+            "event_type": row.event_type,
+            "related_transfer_id": row.related_transfer_id,
+            "payload": row.payload,
+            "created_at": row.created_at,
+        }
+        for row in rows
     ]

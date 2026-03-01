@@ -99,10 +99,17 @@ curl http://localhost:8000/uploads/{id}
 curl http://localhost:8000/transfers
 ```
 
-5. Filtre örnekleri:
+5. Ops event kayıtlarını listeleyin:
+
+```bash
+curl http://localhost:8000/ops-events
+```
+
+6. Filtre örnekleri:
 
 ```bash
 curl "http://localhost:8000/transfers?status=unassigned"
 curl "http://localhost:8000/transfers?airline=ajet"
 curl "http://localhost:8000/transfers?needs_review=true"
+curl "http://localhost:8000/ops-events?event_type=flight_delayed"
 ```

@@ -60,3 +60,15 @@ class Transfer(Base):
     needs_review = Column(Boolean, nullable=False, default=True)
     raw_parse = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class OpsEvent(Base):
+    __tablename__ = "ops_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(String(64), nullable=True, index=True)
+    event_id = Column(String(64), nullable=True, index=True)
+    event_type = Column(String(64), nullable=False, index=True)
+    related_transfer_id = Column(Integer, ForeignKey("transfers.id"), nullable=True, index=True)
+    payload = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
