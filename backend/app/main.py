@@ -75,6 +75,42 @@ def startup_event():
             text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS flight_time VARCHAR(5)")
         )
         conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS trip_type VARCHAR(24)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS outbound_date VARCHAR(10)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS return_date VARCHAR(10)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS segment_count INTEGER")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS outbound_departure_date VARCHAR(10)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS outbound_departure_time VARCHAR(5)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS outbound_arrival_date VARCHAR(10)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS outbound_arrival_time VARCHAR(5)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS return_departure_date VARCHAR(10)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS return_departure_time VARCHAR(5)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS return_arrival_date VARCHAR(10)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS return_arrival_time VARCHAR(5)")
+        )
+        conn.execute(
             text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS confidence DOUBLE PRECISION")
         )
         conn.execute(
@@ -82,6 +118,9 @@ def startup_event():
         )
         conn.execute(
             text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS payment_type VARCHAR(32)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS issue_date VARCHAR(10)")
         )
         conn.execute(
             text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS currency VARCHAR(8)")
@@ -254,6 +293,18 @@ def list_transfers(
             "flight_no": transfer.flight_no,
             "date": transfer.flight_date,
             "time": transfer.flight_time,
+            "trip_type": transfer.trip_type,
+            "outbound_date": transfer.outbound_date,
+            "return_date": transfer.return_date,
+            "segment_count": transfer.segment_count,
+            "outbound_departure_date": transfer.outbound_departure_date,
+            "outbound_departure_time": transfer.outbound_departure_time,
+            "outbound_arrival_date": transfer.outbound_arrival_date,
+            "outbound_arrival_time": transfer.outbound_arrival_time,
+            "return_departure_date": transfer.return_departure_date,
+            "return_departure_time": transfer.return_departure_time,
+            "return_arrival_date": transfer.return_arrival_date,
+            "return_arrival_time": transfer.return_arrival_time,
             "from": transfer.pickup_location,
             "to": transfer.dropoff_location,
             "status": transfer.status,
@@ -264,6 +315,7 @@ def list_transfers(
             "payment_type": transfer.payment_type,
             "currency": transfer.currency,
             "total_amount": transfer.total_amount,
+            "issue_date": "hidden" if transfer.pricing_visibility == "masked" else transfer.issue_date,
             "base_fare": "hidden" if transfer.pricing_visibility == "masked" else transfer.base_fare,
             "taxes": "hidden" if transfer.pricing_visibility == "masked" else transfer.tax_breakdown,
         }

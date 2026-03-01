@@ -45,6 +45,7 @@ def _normalize_name(text: str | None) -> str | None:
     if not text:
         return None
     clean = re.sub(r"[^A-Z\s]", "", text.upper())
+    clean = re.sub(r"\b(PASSENGER|NAME|YOLCU|ISMI|ADI)\b", " ", clean)
     clean = _normalize(clean)
     return clean or None
 
@@ -88,6 +89,16 @@ def _normalize_date(date_text: str | None) -> str | None:
         except ValueError:
             return None
 
+    short_numeric = re.search(r"^(\d{1,2})[./-](\d{1,2})$", value)
+    if short_numeric:
+        day = int(short_numeric.group(1))
+        month = int(short_numeric.group(2))
+        year = datetime.utcnow().year
+        try:
+            return datetime(year, month, day).strftime("%Y-%m-%d")
+        except ValueError:
+            return None
+
     text_match = re.search(r"(\d{1,2})\s*([A-Z]{3})(?:\s*(\d{4}))?", value)
     if text_match:
         day = int(text_match.group(1))
@@ -110,6 +121,18 @@ def _normalize_time(time_text: str | None) -> str | None:
     if not match:
         return None
     return f"{match.group(1)}:{match.group(2)}"
+
+
+def _normalize_hhmm(value: str | None) -> str | None:
+    if not value:
+        return None
+    digits = re.sub(r"[^0-9]", "", value)
+    if len(digits) != 4:
+        return None
+    hh, mm = digits[:2], digits[2:]
+    if int(hh) > 23 or int(mm) > 59:
+        return None
+    return f"{hh}:{mm}"
 
 
 def _first_match(patterns: list[str], text: str) -> str | None:
@@ -231,13 +254,12 @@ def _extract_common_fields(raw_text: str) -> dict[str, str | None]:
     passenger_name = None
     passenger_gender = None
     for i, line in enumerate(lines):
-        if not re.search(r"(PASSENGER NAME|YOLCU ISMI|YOLCU ADI|NAME)", line):
+        if not re.search(r"(PASSENGER NAME|PASSENGER|YOLCU ISMI|YOLCU ADI|NAME)", line):
             continue
 
         candidates = []
-        same_line = _first_match([r"(?:PASSENGER(?: NAME)?|NAME|YOLCU(?: ISMI| ADI)?)[:\s]+(.+)$"], line)
-        if same_line:
-            candidates.append(same_line)
+        if ":" in line:
+            candidates.append(line.split(":", 1)[1])
 
         for step in (1, 2):
             if i + step >= len(lines):
@@ -258,6 +280,24 @@ def _extract_common_fields(raw_text: str) -> dict[str, str | None]:
                 break
         if passenger_name:
             break
+
+    if not passenger_name:
+        direct_name = _first_match(
+            [
+                r"(?:PASSENGER(?: NAME)?|YOLCU(?: ISMI| ADI)?)\s*[:]\s*([A-Z\*\s]{2,})",
+            ],
+            upper,
+        )
+        if direct_name:
+            passenger_name = _strip_name_titles(_normalize_name(direct_name))
+            passenger_gender = _detect_gender_from_name_line(direct_name)
+
+    if passenger_name:
+        passenger_name = re.sub(
+            r"^(?:PASSENGER NAME|PASSENGER|NAME|YOLCU ISMI|YOLCU ADI)\s+",
+            "",
+            passenger_name,
+        ).strip()
 
     pnr = _first_match(
         [
@@ -356,7 +396,83 @@ def _extract_thy_fields(raw_text: str, parsed: dict[str, str | None]) -> dict[st
         match = re.search(r"\b(TK\s?\d{2,4})\b", upper)
         if match:
             parsed["flight_no"] = match.group(1).replace(" ", "")
+    segments = _extract_thy_segments(raw_text)
+    if segments:
+        first = segments[0]
+        parsed["from"] = parsed.get("from") or first["from"]
+        parsed["to"] = parsed.get("to") or first["to"]
+        parsed["flight_no"] = parsed.get("flight_no") or first["flight_no"]
+        parsed["date"] = parsed.get("date") or first["departure_date"]
+        parsed["time"] = parsed.get("time") or first["departure_time"]
+        parsed["segments"] = segments
+
+        reverse = next(
+            (
+                seg
+                for seg in segments[1:]
+                if seg["from"] == first["to"] and seg["to"] == first["from"]
+            ),
+            None,
+        )
+        parsed["outbound_departure_date"] = first["departure_date"]
+        parsed["outbound_departure_time"] = first["departure_time"]
+        parsed["outbound_arrival_date"] = first["arrival_date"]
+        parsed["outbound_arrival_time"] = first["arrival_time"]
+        if reverse:
+            parsed["trip_type"] = "round_trip"
+            parsed["outbound_date"] = first["departure_date"]
+            parsed["return_date"] = reverse["departure_date"]
+            parsed["return_departure_date"] = reverse["departure_date"]
+            parsed["return_departure_time"] = reverse["departure_time"]
+            parsed["return_arrival_date"] = reverse["arrival_date"]
+            parsed["return_arrival_time"] = reverse["arrival_time"]
+        elif len(segments) > 1:
+            parsed["trip_type"] = "connection"
+            parsed["outbound_date"] = first["departure_date"]
+            parsed["return_date"] = None
+        else:
+            parsed["trip_type"] = "one_way"
+            parsed["outbound_date"] = first["departure_date"]
+            parsed["return_date"] = None
+        parsed["segment_count"] = len(segments)
     return parsed
+
+
+def _extract_thy_segments(raw_text: str) -> list[dict[str, str | None]]:
+    upper = raw_text.upper()
+    pattern = re.compile(
+        r"[A-ZÇĞİÖŞÜ]{2,}/([A-Z]{3})\s+"
+        r"[A-ZÇĞİÖŞÜ]{2,}/([A-Z]{3})"
+        r".{0,120}?\bTK\s*([0-9]{3,4})\b"
+        r".{0,80}?(\d{2}-\d{2})"
+        r".{0,40}?(\d{2}-\d{2})"
+        r".{0,80}?(\d{4})\s+(\d{4})",
+        re.DOTALL,
+    )
+    segments: list[dict[str, str | None]] = []
+    seen = set()
+    for m in pattern.finditer(upper):
+        from_code, to_code, flt_no, dep_ddmm, arr_ddmm, dep_hhmm, arr_hhmm = m.groups()
+        dep_time = _normalize_hhmm(dep_hhmm)
+        arr_time = _normalize_hhmm(arr_hhmm)
+        dep_date = _normalize_date(dep_ddmm)
+        arr_date = _normalize_date(arr_ddmm)
+        key = (from_code, to_code, flt_no, dep_ddmm, arr_ddmm, dep_time, arr_time)
+        if key in seen:
+            continue
+        seen.add(key)
+        segments.append(
+            {
+                "from": from_code,
+                "to": to_code,
+                "flight_no": f"TK{flt_no}",
+                "departure_date": dep_date,
+                "arrival_date": arr_date,
+                "departure_time": dep_time,
+                "arrival_time": arr_time,
+            }
+        )
+    return segments
 
 
 def parse_ticket_text(raw_text: str) -> dict[str, Any]:
@@ -380,6 +496,19 @@ def parse_ticket_text(raw_text: str) -> dict[str, Any]:
         "flight_no": parsed.get("flight_no"),
         "date": parsed.get("date"),
         "time": parsed.get("time"),
+        "trip_type": parsed.get("trip_type"),
+        "outbound_date": parsed.get("outbound_date"),
+        "return_date": parsed.get("return_date"),
+        "segment_count": parsed.get("segment_count"),
+        "outbound_departure_date": parsed.get("outbound_departure_date"),
+        "outbound_departure_time": parsed.get("outbound_departure_time"),
+        "outbound_arrival_date": parsed.get("outbound_arrival_date"),
+        "outbound_arrival_time": parsed.get("outbound_arrival_time"),
+        "return_departure_date": parsed.get("return_departure_date"),
+        "return_departure_time": parsed.get("return_departure_time"),
+        "return_arrival_date": parsed.get("return_arrival_date"),
+        "return_arrival_time": parsed.get("return_arrival_time"),
+        "segments": parsed.get("segments"),
         "from": parsed.get("from"),
         "to": parsed.get("to"),
     }

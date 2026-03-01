@@ -116,9 +116,8 @@ def test_detect_thy_when_ticket_contains_anadolujet_leg():
     Bilet No / Ticket Number : 2352413550750
     Rezervasyon No / Booking Ref : S6UWP8
     ANADOLUJET
-    TK 7022
-    ANKARA/ESB - ANTALYA/AYT
-    23-03 0800
+    ANKARA/ESB ANTALYA/AYT TK 7022 T 23-03 23-03 0800 0905
+    ANTALYA/AYT ANKARA/ESB TK 7023 B 27-03 27-03 0920 1025
     """
     result = parse_ticket_text(raw_text)
 
@@ -128,6 +127,12 @@ def test_detect_thy_when_ticket_contains_anadolujet_leg():
     assert parsed["passenger_name"] == "SIMSEK ABDURRAHMAN"
     assert parsed["gender"] == "male"
     assert parsed["pnr"] == "S6UWP8"
+    assert parsed["trip_type"] == "round_trip"
+    assert parsed["segment_count"] == 2
+    assert parsed["outbound_date"] is not None
+    assert parsed["return_date"] is not None
+    assert parsed["segments"][0]["from"] == "ESB"
+    assert parsed["segments"][0]["to"] == "AYT"
 
 
 def test_parse_pricing_fields():
