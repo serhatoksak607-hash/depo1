@@ -105,3 +105,44 @@ def test_needs_review_when_critical_field_missing():
     assert parsed["from"] is None
     assert parsed["to"] is None
     assert result["needs_review"] is True
+
+
+def test_detect_thy_when_ticket_contains_anadolujet_leg():
+    raw_text = """
+    TURKISH AIRLINES
+    THY Genel Mudurlugu
+    ELEKTRONIK BILET YOLCU SEYAHAT BELGESI
+    Yolcu ismi / Passenger Name : SIMSEK ABDURRAHMAN MR
+    Bilet No / Ticket Number : 2352413550750
+    Rezervasyon No / Booking Ref : S6UWP8
+    ANADOLUJET
+    TK 7022
+    ANKARA/ESB - ANTALYA/AYT
+    23-03 0800
+    """
+    result = parse_ticket_text(raw_text)
+
+    parsed = result["parsed"]
+    assert parsed["airline"] == "thy"
+    assert parsed["flight_no"] == "TK7022"
+    assert parsed["passenger_name"] == "SIMSEK ABDURRAHMAN"
+    assert parsed["gender"] == "male"
+    assert parsed["pnr"] == "S6UWP8"
+
+
+def test_parse_pricing_fields():
+    raw_text = """
+    ODEME / PAYMENT : CASH
+    Esas Ucret / Base Fare : TRY 850.98
+    Vergi / Tax : 52.00YR 74.00VQ
+    Toplam / Total : TRY 976.98
+    """
+    result = parse_ticket_text(raw_text)
+    parsed = result["parsed"]
+
+    assert parsed["payment_type"] == "CASH"
+    assert parsed["currency"] == "TRY"
+    assert parsed["base_fare"] == 850.98
+    assert parsed["tax_total"] == 126.0
+    assert parsed["tax_breakdown"] == {"YR": 52.0, "VQ": 74.0}
+    assert parsed["total_amount"] == 976.98

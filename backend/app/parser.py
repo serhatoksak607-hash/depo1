@@ -25,6 +25,17 @@ AIRLINE_CODE_PATTERNS = {
     "thy": r"\bTK\s?\d{2,4}\b",
 }
 
+MALE_TITLES = {"MR", "MISTER", "BAY", "ERKEK"}
+FEMALE_TITLES = {"MS", "MRS", "MISS", "MIZ", "MRS.", "MS.", "BAYAN", "KADIN"}
+GENERIC_NAME_TOKENS = {
+    "PASSENGER NAME",
+    "YOLCU ISMI",
+    "YOLCU ISMI PASSENGER NAME",
+    "ISMI PASSENGER NAME",
+    "COMPANY NAME",
+}
+INVALID_AIRPORT_CODES = {"DAY", "MON", "NVB", "NVA", "CLS", "BAG", "CPN", "TKT"}
+
 
 def _normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text or "").strip()
@@ -36,6 +47,27 @@ def _normalize_name(text: str | None) -> str | None:
     clean = re.sub(r"[^A-Z\s]", "", text.upper())
     clean = _normalize(clean)
     return clean or None
+
+
+def _strip_name_titles(name_value: str | None) -> str | None:
+    if not name_value:
+        return None
+    parts = [p for p in name_value.split(" ") if p]
+    while parts and parts[-1] in MALE_TITLES.union(FEMALE_TITLES):
+        parts.pop()
+    return " ".join(parts) if parts else None
+
+
+def _detect_gender_from_name_line(name_line: str | None) -> str | None:
+    if not name_line:
+        return None
+    upper = name_line.upper()
+    tokens = set(re.findall(r"[A-Z]+", upper))
+    if tokens & MALE_TITLES:
+        return "male"
+    if tokens & FEMALE_TITLES:
+        return "female"
+    return None
 
 
 def _normalize_date(date_text: str | None) -> str | None:
@@ -88,17 +120,99 @@ def _first_match(patterns: list[str], text: str) -> str | None:
     return None
 
 
+def _to_amount(value: str | None) -> float | None:
+    if not value:
+        return None
+    normalized = value.strip()
+    if "," in normalized and "." in normalized:
+        if normalized.rfind(",") > normalized.rfind("."):
+            normalized = normalized.replace(".", "").replace(",", ".")
+        else:
+            normalized = normalized.replace(",", "")
+    elif "," in normalized:
+        normalized = normalized.replace(",", ".")
+    try:
+        return round(float(normalized), 2)
+    except ValueError:
+        return None
+
+
+def _extract_pricing_fields(raw_text: str) -> dict[str, Any]:
+    upper = (raw_text or "").upper()
+
+    payment_type = _first_match(
+        [r"(?:PAYMENT|ODEME|ÖDEME)\s*[:]\s*([A-Z]+)"],
+        upper,
+    )
+
+    base_fare_match = re.search(
+        r"(?:BASE FARE|ESAS UCRET|ESAS ÜCRET)\s*[:]\s*([A-Z]{3})?\s*([0-9]+[.,][0-9]{2})",
+        upper,
+    )
+    total_match = re.search(
+        r"(?:TOTAL|TOPLAM)\s*[:]\s*([A-Z]{3})?\s*([0-9]+[.,][0-9]{2})",
+        upper,
+    )
+    tax_line = _first_match([r"(?:TAX|VERGI|VERGİ)\s*[:]\s*([^\n\r]+)"], upper)
+
+    currency = None
+    if total_match and total_match.group(1):
+        currency = total_match.group(1)
+    elif base_fare_match and base_fare_match.group(1):
+        currency = base_fare_match.group(1)
+
+    base_fare = _to_amount(base_fare_match.group(2) if base_fare_match else None)
+    total_amount = _to_amount(total_match.group(2) if total_match else None)
+
+    tax_breakdown: dict[str, float] = {}
+    tax_total = None
+    if tax_line:
+        pairs = re.findall(r"([0-9]+[.,][0-9]{2})\s*([A-Z]{2})", tax_line)
+        for amount_raw, code in pairs:
+            amount = _to_amount(amount_raw)
+            if amount is not None:
+                tax_breakdown[code] = amount
+        if tax_breakdown:
+            tax_total = round(sum(tax_breakdown.values()), 2)
+
+    return {
+        "payment_type": payment_type,
+        "currency": currency,
+        "total_amount": total_amount,
+        "base_fare": base_fare,
+        "tax_total": tax_total,
+        "tax_breakdown": tax_breakdown or None,
+    }
+
+
 def detect_airline(raw_text: str) -> str:
     upper = (raw_text or "").upper()
 
-    if any(token in upper for token in ["AJET", "A JET", "ANADOLUJET"]):
+    # THY e-ticket format often includes ANADOLUJET legs with TK flight numbers.
+    if any(
+        token in upper
+        for token in [
+            "TURKISH AIRLINES",
+            "TURK HAVA YOLLARI",
+            "THY GENEL MUDURLUGU",
+            "THY GENEL MÜDÜRLÜĞÜ",
+            "ELECTRONIC TICKET PASSENGER ITINERARY",
+            "ELEKTRONIK BILET YOLCU SEYAHAT BELGESI",
+            "ELEKTRONİK BİLET YOLCU SEYAHAT BELGESİ",
+        ]
+    ):
+        return "thy"
+    if "ANADOLUJET" in upper:
+        # Legacy THY-issued AnadoluJet tickets are usually TK-coded.
+        if re.search(r"\bTK\s?\d{2,4}\b", upper):
+            return "thy"
+        return "ajet"
+    if any(token in upper for token in ["AJET", "A JET"]):
         return "ajet"
     if "SUNEXPRESS" in upper:
         return "sunexpress"
     if "PEGASUS" in upper:
         return "pegasus"
-    if any(token in upper for token in ["TURKISH AIRLINES", "TURK HAVA YOLLARI", " THY "]):
-        return "thy"
 
     first_hit = None
     for airline, pattern in AIRLINE_CODE_PATTERNS.items():
@@ -115,16 +229,39 @@ def _extract_common_fields(raw_text: str) -> dict[str, str | None]:
     lines = [line.strip().upper() for line in (raw_text or "").splitlines() if line.strip()]
 
     passenger_name = None
-    for line in lines:
-        name_match = re.search(r"(?:PASSENGER|NAME|YOLCU(?: ADI)?)[:\s]+(.+)$", line)
-        if name_match:
-            passenger_name = _normalize_name(name_match.group(1))
+    passenger_gender = None
+    for i, line in enumerate(lines):
+        if not re.search(r"(PASSENGER NAME|YOLCU ISMI|YOLCU ADI|NAME)", line):
+            continue
+
+        candidates = []
+        same_line = _first_match([r"(?:PASSENGER(?: NAME)?|NAME|YOLCU(?: ISMI| ADI)?)[:\s]+(.+)$"], line)
+        if same_line:
+            candidates.append(same_line)
+
+        for step in (1, 2):
+            if i + step >= len(lines):
+                continue
+            lookahead = lines[i + step].strip(": ").strip()
+            if lookahead:
+                candidates.append(lookahead)
+
+        for candidate in candidates:
+            clean_upper = _normalize(re.sub(r"[^A-Z\s]", " ", candidate))
+            if not clean_upper:
+                continue
+            if clean_upper in GENERIC_NAME_TOKENS:
+                continue
+            passenger_name = _strip_name_titles(clean_upper)
+            passenger_gender = _detect_gender_from_name_line(candidate)
             if passenger_name:
                 break
+        if passenger_name:
+            break
 
     pnr = _first_match(
         [
-            r"(?:PNR|RESERVATION CODE|BOOKING CODE)[:\s]+([A-Z0-9]{5,8})",
+            r"(?:PNR|RESERVATION CODE|BOOKING CODE|BOOKING REF|REZERVASYON NO)[:\s]+([A-Z0-9]{5,8})",
             r"\bPNR[:\s]*([A-Z0-9]{5,8})\b",
         ],
         upper,
@@ -138,11 +275,22 @@ def _extract_common_fields(raw_text: str) -> dict[str, str | None]:
         upper,
     )
     if flight_no:
-        flight_no = flight_no.replace(" ", "")
+        flight_no = re.sub(r"\s+", "", flight_no)
 
     route_match = re.search(r"\b([A-Z]{3})\s*[-/]\s*([A-Z]{3})\b", upper)
     from_airport = route_match.group(1) if route_match else None
     to_airport = route_match.group(2) if route_match else None
+    if from_airport in INVALID_AIRPORT_CODES or to_airport in INVALID_AIRPORT_CODES:
+        from_airport, to_airport = None, None
+    if not from_airport or not to_airport:
+        code_line_match = re.search(
+            r"[A-ZÇĞİÖŞÜ]{2,}/([A-Z]{3}).{0,20}[A-ZÇĞİÖŞÜ]{2,}/([A-Z]{3})",
+            upper,
+            flags=re.DOTALL,
+        )
+        if code_line_match:
+            from_airport = code_line_match.group(1)
+            to_airport = code_line_match.group(2)
     if not route_match:
         from_airport = _first_match([r"\bFROM[:\s]+([A-Z]{3})\b", r"\bKALKIS[:\s]+([A-Z]{3})\b"], upper)
         to_airport = _first_match([r"\bTO[:\s]+([A-Z]{3})\b", r"\bVARIS[:\s]+([A-Z]{3})\b"], upper)
@@ -165,6 +313,7 @@ def _extract_common_fields(raw_text: str) -> dict[str, str | None]:
 
     return {
         "passenger_name": passenger_name,
+        "gender": passenger_gender,
         "pnr": pnr,
         "flight_no": flight_no,
         "date": _normalize_date(date_raw),
@@ -226,6 +375,7 @@ def parse_ticket_text(raw_text: str) -> dict[str, Any]:
     normalized = {
         "airline": airline,
         "passenger_name": parsed.get("passenger_name"),
+        "gender": parsed.get("gender") or "unknown",
         "pnr": parsed.get("pnr"),
         "flight_no": parsed.get("flight_no"),
         "date": parsed.get("date"),
@@ -233,6 +383,7 @@ def parse_ticket_text(raw_text: str) -> dict[str, Any]:
         "from": parsed.get("from"),
         "to": parsed.get("to"),
     }
+    normalized.update(_extract_pricing_fields(raw_text))
 
     scored_fields = ["passenger_name", "pnr", "flight_no", "date", "time", "from", "to"]
     found_count = sum(1 for field in scored_fields if normalized.get(field))

@@ -60,6 +60,9 @@ def startup_event():
             text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS passenger_name VARCHAR(255)")
         )
         conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS passenger_gender VARCHAR(16)")
+        )
+        conn.execute(
             text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS pnr VARCHAR(16)")
         )
         conn.execute(
@@ -76,6 +79,27 @@ def startup_event():
         )
         conn.execute(
             text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS needs_review BOOLEAN NOT NULL DEFAULT TRUE")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS payment_type VARCHAR(32)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS currency VARCHAR(8)")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS total_amount DOUBLE PRECISION")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS base_fare DOUBLE PRECISION")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS tax_total DOUBLE PRECISION")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS tax_breakdown JSONB")
+        )
+        conn.execute(
+            text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS pricing_visibility VARCHAR(16) NOT NULL DEFAULT 'masked'")
         )
         conn.execute(
             text("ALTER TABLE transfers ADD COLUMN IF NOT EXISTS raw_parse JSONB")
@@ -225,6 +249,7 @@ def list_transfers(
             "upload_id": transfer.upload_id,
             "airline": transfer.airline,
             "passenger_name": transfer.passenger_name,
+            "passenger_gender": transfer.passenger_gender,
             "pnr": transfer.pnr,
             "flight_no": transfer.flight_no,
             "date": transfer.flight_date,
@@ -236,6 +261,11 @@ def list_transfers(
             "confidence": transfer.confidence,
             "needs_review": transfer.needs_review,
             "created_at": transfer.created_at,
+            "payment_type": transfer.payment_type,
+            "currency": transfer.currency,
+            "total_amount": transfer.total_amount,
+            "base_fare": "hidden" if transfer.pricing_visibility == "masked" else transfer.base_fare,
+            "taxes": "hidden" if transfer.pricing_visibility == "masked" else transfer.tax_breakdown,
         }
         for transfer in items
     ]

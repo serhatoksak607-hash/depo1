@@ -85,12 +85,19 @@ def _create_or_update_transfer(
     field_map = {
         "airline": (parsed.get("airline") or "unknown").lower(),
         "passenger_name": parsed.get("passenger_name"),
+        "passenger_gender": parsed.get("gender"),
         "pnr": parsed.get("pnr"),
         "flight_no": parsed.get("flight_no"),
         "flight_date": parsed.get("date"),
         "flight_time": parsed.get("time"),
         "pickup_location": parsed.get("from"),
         "dropoff_location": parsed.get("to"),
+        "payment_type": parsed.get("payment_type"),
+        "currency": parsed.get("currency"),
+        "total_amount": parsed.get("total_amount"),
+        "base_fare": parsed.get("base_fare"),
+        "tax_total": parsed.get("tax_total"),
+        "tax_breakdown": parsed.get("tax_breakdown"),
     }
     for attr, new_value in field_map.items():
         old_value = getattr(transfer, attr, None)
@@ -101,6 +108,7 @@ def _create_or_update_transfer(
     transfer.status = transfer.status or "unassigned"
     transfer.confidence = confidence
     transfer.needs_review = needs_review
+    transfer.pricing_visibility = transfer.pricing_visibility or "masked"
     transfer.raw_parse = parsed_payload
     return transfer, bool(changed_fields), changed_fields
 
