@@ -104,16 +104,16 @@ Kayit edilen alanlar:
 
 ```text
 .
-├─ backend/
-│  ├─ app/
-│  │  ├─ db.py
-│  │  ├─ main.py
-│  │  └─ models.py
-│  ├─ Dockerfile
-│  └─ requirements.txt
-├─ storage/
-│  └─ uploads/
-├─ docs/
-│  └─ spec.md
-└─ docker-compose.yml
+|-- backend/
+|   |-- app/
+|   |   |-- db.py
+|   |   |-- main.py
+|   |   `-- models.py
+|   |-- Dockerfile
+|   `-- requirements.txt
+|-- storage/
+|   `-- uploads/
+|-- docs/
+|   `-- spec.md
+`-- docker-compose.yml
 ```
