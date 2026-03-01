@@ -45,5 +45,23 @@ services:
     volumes:
       - ./storage/uploads:/app/storage/uploads
 
+  worker:
+    build:
+      context: ./backend
+    container_name: transfer_worker
+    command: ["python", "-m", "app.worker"]
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/transfer_db
+      REDIS_URL: redis://redis:6379/0
+      UPLOAD_DIR: /app/storage/uploads
+      RQ_QUEUE: upload_processing
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./storage/uploads:/app/storage/uploads
+
 volumes:
   postgres_data:

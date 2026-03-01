@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String, Text, func
 
 from .db import Base
 
@@ -12,6 +12,9 @@ class Upload(Base):
     content_type = Column(String(100), nullable=False)
     file_size = Column(Integer, nullable=False)
     file_path = Column(String(500), nullable=False)
+    status = Column(String(20), nullable=False, default="pending")
+    parse_result = Column(JSON, nullable=True)
+    error_message = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 

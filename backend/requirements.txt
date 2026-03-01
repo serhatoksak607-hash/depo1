@@ -3,4 +3,6 @@ uvicorn[standard]==0.34.0
 sqlalchemy==2.0.38
 psycopg2-binary==2.9.10
 redis==5.2.1
+rq==1.16.2
+pypdf==5.4.0
 python-multipart==0.0.20
