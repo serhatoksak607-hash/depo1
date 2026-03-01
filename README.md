@@ -3,6 +3,7 @@
 FastAPI tabanli backend MVP: dosya yukleme, saglik kontrolu ve temel transfer tablolari.
 
 Detayli tasarim dokumani: `docs/spec.md`
+AI Agent gelistirme akisi: `docs/ai-agent-developer-workflow.md`
 
 ## Hizli Baslangic
 
