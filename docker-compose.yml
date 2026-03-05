@@ -35,6 +35,15 @@ services:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/transfer_db
       REDIS_URL: redis://redis:6379/0
       UPLOAD_DIR: /app/storage/uploads
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8000}
+      APP_ENV: ${APP_ENV:-development}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-*}
+      COOKIE_SECURE: ${COOKIE_SECURE:-0}
+      COOKIE_SAMESITE: ${COOKIE_SAMESITE:-lax}
+      SESSION_IDLE_MINUTES: ${SESSION_IDLE_MINUTES:-10}
+      APP_ADMIN_USER: CreaTRO
+      APP_ADMIN_PASS: Micetro25+.
     depends_on:
       postgres:
         condition: service_healthy
@@ -43,6 +52,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - ./backend/app:/app/app
       - ./storage/uploads:/app/storage/uploads
 
   worker:

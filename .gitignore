@@ -1,2 +1,7 @@
 storage/uploads/*
 !storage/uploads/.gitkeep
+.env
+*.pyc
+__pycache__/
+exports/
+tmp_*.txt

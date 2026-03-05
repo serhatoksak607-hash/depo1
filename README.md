@@ -1,68 +1,57 @@
-# Transfer Modulu MVP
+# Event Transfer Module MVP
 
-FastAPI tabanli backend MVP: dosya yukleme, saglik kontrolu ve temel transfer tablolari.
+Core flow:
+`Upload -> Parse -> Transfer -> Operations list`
 
-Detayli tasarim dokumani: `docs/spec.md`
-AI Agent gelistirme akisi: `docs/ai-agent-developer-workflow.md`
+FastAPI tabanli backend MVP:
+- File upload
+- OCR + parser
+- Transfer auto-create
+- Ops event tracking
 
-## Hizli Baslangic
+Detayli tasarim: `docs/spec.md`  
+AI agent workflow: `docs/ai-agent-developer-workflow.md`
+Production deployment notes: `docs/deployment-production.md`
 
-1. Docker Desktop'i acin.
-2. Proje kokunde calistirin:
+## Quick Start
+
+1. Docker Desktop acik olsun.
+2. Proje kokunde calistir:
 
 ```bash
 docker compose up --build -d
 ```
 
-3. Endpoint kontrolleri:
+3. Health kontrolu:
 
 ```bash
 curl http://localhost:8000/health
 ```
 
-## Sprint 2 Test Adimlari (Real OCR + Parser v0)
+## Main Endpoints
 
-1. Parser unit testlerini calistirin:
+- `POST /upload`
+- `GET /uploads/{id}`
+- `GET /transfers`
+- `GET /ops-events`
 
-```bash
-docker compose exec backend python -m pytest -q
-```
+## Airline Detection Order
 
-2. Samples altindaki maskeli bir dosyayi upload edin:
+Parser once marka adini, sonra ucus kodunu kullanir:
 
-```bash
-curl -X POST "http://localhost:8000/upload" ^
-  -H "accept: application/json" ^
-  -H "Content-Type: multipart/form-data" ^
-  -F "file=@C:/path/samples/ocr_ticket.png"
-```
-
-3. Cevaptan `id` degerini alin ve kaydi sorgulayin:
-
-```bash
-curl http://localhost:8000/uploads/{id}
-```
-
-4. Beklenen durum:
-
-- Ilk anda `status: "pending"` gelebilir.
-- Worker isledikten sonra `status: "processed"` olur.
-- `parse_result` alani su formatta dolar:
-  `{"method":"pdf_text|ocr","raw_text":"...","parsed":{...},"confidence":0-1,"needs_review":true|false}`.
-
-## Airline Detection Sirasi
-
-Parser asagidaki sinyallere gore havayolunu belirler:
-
-1. Marka adi: `AJET/ANADOLUJET`, `SUNEXPRESS`, `PEGASUS`, `TURKISH AIRLINES/THY`
+1. Marka sinyali:
+   - `AJET/ANADOLUJET` -> `ajet`
+   - `SUNEXPRESS` -> `sunexpress`
+   - `PEGASUS` -> `pegasus`
+   - `TURKISH AIRLINES/THY` -> `thy`
 2. Ucus kodu:
    - `VF` -> `ajet`
    - `XQ` -> `sunexpress`
    - `PC` -> `pegasus`
    - `TK` -> `thy`
-3. Hicbiri yoksa `unknown`
+3. Hicbiri yoksa: `unknown`
 
-## Sample Veriler
+## Samples
 
 - `samples/ajet_ticket_masked.txt`
 - `samples/sunexpress_ticket_masked.txt`
@@ -70,15 +59,15 @@ Parser asagidaki sinyallere gore havayolunu belirler:
 - `samples/thy_ticket_masked.txt`
 - `samples/ocr_ticket.png`
 
-## Sprint 3 Test Adimlari (Transfer Engine + Transfers API)
+## Sprint 2 Validation (OCR + Parser)
 
-1. Servisleri ayağa kaldırın:
+1. Unit tests:
 
 ```bash
-docker compose up --build -d
+docker compose exec backend python -m pytest -q
 ```
 
-2. Örnek bir bilet dosyası yükleyin:
+2. Upload test:
 
 ```bash
 curl -X POST "http://localhost:8000/upload" ^
@@ -87,25 +76,42 @@ curl -X POST "http://localhost:8000/upload" ^
   -F "file=@C:/path/samples/ocr_ticket.png"
 ```
 
-3. Upload işlenene kadar bekleyip kontrol edin:
+3. Upload sonucu:
 
 ```bash
 curl http://localhost:8000/uploads/{id}
 ```
 
-4. Transfer kayıtlarını listeleyin:
+Beklenen:
+- Ilk anda `status=pending` olabilir.
+- Sonra `status=processed`.
+- `parse_result` formati:
+  `{"method":"pdf_text|ocr","raw_text":"...","parsed":{...},"confidence":0-1,"needs_review":true|false}`
+
+## Sprint 3 Validation (Transfer Engine + Ops Events)
+
+1. Upload gonder:
+
+```bash
+curl -X POST "http://localhost:8000/upload" ^
+  -H "accept: application/json" ^
+  -H "Content-Type: multipart/form-data" ^
+  -F "file=@C:/path/samples/ocr_ticket.png"
+```
+
+2. Transfer listesi:
 
 ```bash
 curl http://localhost:8000/transfers
 ```
 
-5. Ops event kayıtlarını listeleyin:
+3. Ops event listesi:
 
 ```bash
 curl http://localhost:8000/ops-events
 ```
 
-6. Filtre örnekleri:
+4. Filtre ornekleri:
 
 ```bash
 curl "http://localhost:8000/transfers?status=unassigned"
@@ -113,3 +119,33 @@ curl "http://localhost:8000/transfers?airline=ajet"
 curl "http://localhost:8000/transfers?needs_review=true"
 curl "http://localhost:8000/ops-events?event_type=flight_delayed"
 ```
+
+## Ticket Scan App (THY List + Missing Fields)
+
+Klasordeki tum PDF biletleri tarar, THY adaylarini listeler ve eksik alan raporu uretir.
+
+Calistirma:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\run_ticket_scan.ps1 `
+  -SourceDir "C:\Users\SAĞLAM YAPI\OneDrive\SERHAT\,\Yeni klasör\GEÇİCİ MASAÜSTÜ -2\Yeni klasör\GÖNDERİLMİŞ OLANLAR" `
+  -OutputDir "exports"
+```
+
+Uygulama icinden dosya/klasor secmek icin:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\run_ticket_scan.ps1
+```
+
+Opsiyonel XLSX cikti icin:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\run_ticket_scan.ps1 -Xlsx
+```
+
+Uretilen dosyalar:
+- `exports/ticket_scan_full_report.csv` (tum biletler)
+- `exports/ticket_scan_thy_only.csv` (yalniz THY/TK adaylari)
+- `exports/ticket_scan_thy_missing_summary.csv` (THY icin eksik alan sayilari)
+- `exports/ticket_scan_summary.json` (ozet)

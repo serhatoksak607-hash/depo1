@@ -151,3 +151,91 @@ def test_parse_pricing_fields():
     assert parsed["tax_total"] == 126.0
     assert parsed["tax_breakdown"] == {"YR": 52.0, "VQ": 74.0}
     assert parsed["total_amount"] == 976.98
+
+
+def test_target_airport_classification_marks_outbound_and_return():
+    raw_text = """
+    TURKISH AIRLINES
+    Yolcu ismi / Passenger Name : SIMSEK ABDURRAHMAN MR
+    Rezervasyon No / Booking Ref : S6UWP8
+    ANKARA/ESB ANTALYA/AYT TK 7022 T 23-03 23-03 0800 0905
+    ANTALYA/AYT ANKARA/ESB TK 7023 B 27-03 27-03 0920 1025
+    """
+    result = parse_ticket_text(raw_text, target_airports="AYT")
+    parsed = result["parsed"]
+
+    assert parsed["target_airports"] == ["AYT"]
+    assert parsed["trip_scope"] == "target_related"
+    assert parsed["trip_type"] == "round_trip"
+    assert parsed["from"] == "ESB"
+    assert parsed["to"] == "AYT"
+    assert parsed["segments"][0]["segment_role"] == "gidis"
+    assert parsed["segments"][1]["segment_role"] == "donus"
+
+
+def test_target_airport_classification_marks_transfer_when_target_not_in_route():
+    raw_text = """
+    TURKISH AIRLINES
+    Yolcu ismi / Passenger Name : KUTLU BURAK MR
+    Rezervasyon No / Booking Ref : UMTZ4G
+    ANTALYA/AYT ANKARA/ESB TK 7035 B 26-03 26-03 2205 2310
+    """
+    result = parse_ticket_text(raw_text, target_airports="IST")
+    parsed = result["parsed"]
+
+    assert parsed["target_airports"] == ["IST", "SAW"]
+    assert parsed["trip_scope"] == "transfer_only"
+    assert parsed["has_transfer_segments"] is True
+    assert parsed["trip_type"] == "connection"
+    assert parsed["segments"][0]["segment_role"] == "aktarma"
+
+
+def test_target_airport_classification_supports_return_only():
+    raw_text = """
+    TURKISH AIRLINES
+    Yolcu ismi / Passenger Name : KUTLU BURAK MR
+    Rezervasyon No / Booking Ref : UMTZ4G
+    ANTALYA/AYT ANKARA/ESB TK 7035 B 26-03 26-03 2205 2310
+    """
+    result = parse_ticket_text(raw_text, target_airports="AYT")
+    parsed = result["parsed"]
+
+    assert parsed["trip_scope"] == "target_related"
+    assert parsed["trip_type"] == "return_only"
+    assert parsed["segments"][0]["segment_role"] == "donus"
+
+
+def test_no_target_means_unclassified_segments():
+    raw_text = """
+    TURKISH AIRLINES
+    Yolcu ismi / Passenger Name : SIMSEK ABDURRAHMAN MR
+    Rezervasyon No / Booking Ref : S6UWP8
+    ANKARA/ESB ANTALYA/AYT TK 7022 T 23-03 23-03 0800 0905
+    ANTALYA/AYT ANKARA/ESB TK 7023 B 27-03 27-03 0920 1025
+    """
+    result = parse_ticket_text(raw_text)
+    parsed = result["parsed"]
+
+    assert parsed["target_airports"] is None
+    assert parsed["trip_scope"] == "unclassified"
+    assert parsed["segments"][0]["segment_role"] == "belirsiz"
+    assert parsed["segments"][1]["segment_role"] == "belirsiz"
+
+
+def test_pegasus_multisegment_target_classification():
+    raw_text = """
+    PEGASUS E-TICKET
+    PASSENGER NAME: DEMO USER
+    PNR AB12CD
+    ISTANBUL/SAW ANTALYA/AYT PC 2210 B 23-03 23-03 0930 1040
+    ANTALYA/AYT ISTANBUL/SAW PC 2211 B 27-03 27-03 1200 1310
+    """
+    result = parse_ticket_text(raw_text, target_airports="AYT")
+    parsed = result["parsed"]
+
+    assert parsed["airline"] == "pegasus"
+    assert parsed["trip_type"] == "round_trip"
+    assert parsed["segments"][0]["flight_no"] == "PC2210"
+    assert parsed["segments"][0]["segment_role"] == "gidis"
+    assert parsed["segments"][1]["flight_no"] == "PC2211"
+    assert parsed["segments"][1]["segment_role"] == "donus"
