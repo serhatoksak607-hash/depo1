@@ -31,6 +31,32 @@ Dogru kullanim:
 - calisan ana sistem: Docker destekli sunucu veya VPS
 - Vercel: ancak ileride ayri bir frontend cikarsa
 
+## Participant Uygulamasi
+
+Repo icinde Expo tabanli bir participant istemcisi de bulunur:
+- klasor: `mobile`
+- urun adi: `Creatro Participant`
+- kullanim: katilimci odakli login, proje secimi ve toplanti/rezervasyon/duyuru akisleri
+
+Participant is kurallari:
+- login ve header tarafinda varsayilan gorsel acenta logosudur
+- alt proje gorseli tanimliysa acenta logosunun yerine proje gorseli gelir
+- tema onceligi acenta renkleridir; proje tema renkleri varsa onlar override eder
+- participant ana sponsor logosu plaka alaninin yerini alir
+- hero kartta `Toplanti Modulu` yer alir
+- alt kartlar: `Program Akisi`, `Bildiriler`, `Sertifikalar`, `Kurslar`
+- `Masraflarim` yerine `Duyurular`
+- `Gorevlerim` yerine `Rezervasyonlarim`
+- `Rezervasyonlarim` icinde transfer ve konaklama detaylari gorunur
+- participant QR okutuldugunda:
+  - transfer akisi icin transfer sponsoru tesekkur gorseli
+  - kayit veya konaklama akisi icin kayit-konaklama sponsoru tesekkur gorseli
+
+Gelecek notlari:
+- `modules-ui` tarafindaki destek butonu ileride SaaS yonetim paneline baglanacak
+- SaaS ekibi icin SMS ve WhatsApp baglantilari acilacak
+- gelen destek mesajlari icin bildirim akisi eklenecek
+
 ## Quick Start
 
 1. Docker Desktop acik olsun.

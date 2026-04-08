@@ -1,19 +1,21 @@
-# Creatro Mobile (Expo)
+# Creatro Participant (Expo)
 
-## 1) Kurulum
+Bu klasor katilimci uygulamasinin Expo tabanli istemcisidir.
+
+## Kurulum
 
 ```bash
 cd mobile
 npm install
 ```
 
-## 2) API adresi
+## API adresi
 
-Uygulama `EXPO_PUBLIC_API_BASE` kullanır.
+Uygulama `EXPO_PUBLIC_API_BASE` kullanir.
 
 - Android emulator: `http://10.0.2.2:8000`
 - iOS simulator: `http://127.0.0.1:8000`
-- Gerçek cihaz: `http://<PC_LAN_IP>:8000`
+- Gercek cihaz: `http://<PC_LAN_IP>:8000`
 
 PowerShell:
 
@@ -22,18 +24,21 @@ $env:EXPO_PUBLIC_API_BASE="http://127.0.0.1:8000"
 npm run start
 ```
 
-## 3) Çalıştırma
+## Akis
 
-```bash
-npm run start
-```
+- Login ve header tarafinda varsayilan gorsel acenta logosudur.
+- Alt proje icin ozel gorsel tanimliysa acenta logosunun yerine o gorsel kullanilir.
+- Tema onceligi acenta renkleridir; proje tema renkleri tanimliysa onlar override eder.
+- Ana sponsor alani participant tarafinda plaka yerine kullanilir.
+- Hero kartta `Toplanti Modulu` yer alir.
+- Hero altinda `Program Akisi`, `Bildiriler`, `Sertifikalar`, `Kurslar` kartlari bulunur.
+- `Masraflarim` yerine `Duyurular`, `Gorevlerim` yerine `Rezervasyonlarim` kullanilir.
+- `Rezervasyonlarim` icinde transfer ve konaklama bilgileri gorunur; ileride degisiklik talebi acilabilir.
+- Katilimci QR okutuldugunda:
+  - transfer akisi icin transfer sponsoru tesekkur gorseli,
+  - kayit veya konaklama akisi icin kayit-konaklama sponsoru tesekkur gorseli acilir.
 
-Expo QR ile Android/iOS cihazda açılabilir.
+## Vercel
 
-## 4) Akış
-
-- Login (`/auth/login`)
-- Profil çek (`/auth/me`)
-- Proje seçimi gerekiyorsa (`/projects` + `/auth/active-project`)
-- Ana sayfada `visible_modules` ile modül listesi
-- Modül butonları backend web modül URL’lerini açar.
+Bu Expo istemcisi web preview olarak Vercel'e deploy edilebilir.
+Bu, native iOS/Android paketinin yerine gecmez; web preview sunar.

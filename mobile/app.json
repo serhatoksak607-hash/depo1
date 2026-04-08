@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Creatro Mobile",
-    "slug": "creatro-mobile",
+    "name": "Creatro Participant",
+    "slug": "creatro-participant",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
