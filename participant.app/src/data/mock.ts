@@ -182,7 +182,7 @@ const appConfigsByRole: Record<Role, AppConfig> = {
 const shellProfilesByRole: Record<Role, ShellProfile> = {
   driver: {
     role: "driver",
-    full_name: "Ahmet Yılmaz",
+    full_name: "Serhat OKŞAK",
     vehicle_label: "Mercedes Vito Tourer",
     plate_label: "07 ABC 123",
   },

@@ -25,6 +25,9 @@ const queryClient = new QueryClient();
 const LOADING_MIN_MS = 120;
 const WELCOME_MIN_MS = 1200;
 const ENABLE_WELCOME_VIDEO = false;
+const AUTH_STORAGE_KEY = "participant-auth-v1";
+const AUTH_USERNAME = "CreaTRo";
+const AUTH_PASSWORD = "Micetro25+.";
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => {
@@ -76,6 +79,78 @@ function mixHexWithWhite(hex: string, whiteRatio: number) {
 
 interface WelcomeOverlayProps {
   role: Role;
+}
+
+function LoginGate({ onLogin }: { onLogin: () => void }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = () => {
+    if (username.trim() === AUTH_USERNAME && password === AUTH_PASSWORD) {
+      window.localStorage.setItem(AUTH_STORAGE_KEY, "1");
+      setError("");
+      onLogin();
+      return;
+    }
+
+    setError("Kullanıcı adı veya şifre hatalı.");
+  };
+
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-[#091028]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(88,199,242,0.22),_transparent_44%),linear-gradient(180deg,_#0B1430_0%,_#08101F_100%)]" />
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-5 py-10">
+        <div className="w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-white shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+          <div className="bg-[#091028] px-8 py-8 text-center">
+            <img src={creatroLogo} alt="" className="mx-auto h-16 w-auto object-contain" />
+            <p className="mt-5 text-xs font-bold uppercase tracking-[0.3em] text-[#D4AF37]">Participant Login</p>
+            <h1 className="mt-3 text-2xl font-semibold text-white">Hoş Geldin</h1>
+            <p className="mt-2 text-sm text-slate-300">Katılımcı uygulamasına giriş yaparak devam edin.</p>
+          </div>
+          <div className="space-y-4 px-8 py-8">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              <p><strong>Kullanıcı:</strong> {AUTH_USERNAME}</p>
+              <p><strong>Şifre:</strong> {AUTH_PASSWORD}</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">Kullanıcı Adı</label>
+              <input
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#D4AF37]"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") handleSubmit();
+                }}
+                placeholder="CreaTRo"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">Şifre</label>
+              <input
+                type="password"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#D4AF37]"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") handleSubmit();
+                }}
+                placeholder="Micetro25+."
+              />
+            </div>
+            {error ? <p className="text-sm font-medium text-rose-600">{error}</p> : null}
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="w-full rounded-2xl bg-[#091028] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#10203F]"
+            >
+              Giriş Yap
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function WelcomeOverlay({ role }: WelcomeOverlayProps) {
@@ -172,10 +247,16 @@ function WelcomeOverlay({ role }: WelcomeOverlayProps) {
 }
 
 const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => window.localStorage.getItem(AUTH_STORAGE_KEY) === "1");
   const [bootPhase, setBootPhase] = useState<"loading" | "welcome" | "ready">("loading");
   const [bootRole] = useState<Role>("driver");
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setBootPhase("loading");
+      return;
+    }
+
     let active = true;
 
     const runBootFlow = async () => {
@@ -204,7 +285,7 @@ const App = () => {
     return () => {
       active = false;
     };
-  }, [bootRole]);
+  }, [bootRole, isAuthenticated]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -212,18 +293,22 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          {bootPhase === "loading" ? (
-            <AppLoadingScreen role={bootRole} />
-          ) : bootPhase === "welcome" ? (
-            <WelcomeOverlay role={bootRole} />
+          {!isAuthenticated ? (
+            <LoginGate onLogin={() => setIsAuthenticated(true)} />
           ) : (
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
+            bootPhase === "loading" ? (
+              <AppLoadingScreen role={bootRole} />
+            ) : bootPhase === "welcome" ? (
+              <WelcomeOverlay role={bootRole} />
+            ) : (
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            )
           )}
         </TooltipProvider>
       </AppStateProvider>
