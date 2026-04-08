@@ -5,7 +5,7 @@ Bu klasor katilimci uygulamasinin Expo tabanli istemcisidir.
 ## Kurulum
 
 ```bash
-cd mobile
+cd participant.app
 npm install
 ```
 

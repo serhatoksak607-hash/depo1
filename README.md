@@ -34,7 +34,7 @@ Dogru kullanim:
 ## Participant Uygulamasi
 
 Repo icinde Expo tabanli bir participant istemcisi de bulunur:
-- klasor: `mobile`
+- klasor: `participant.app`
 - urun adi: `Creatro Participant`
 - kullanim: katilimci odakli login, proje secimi ve toplanti/rezervasyon/duyuru akisleri
 

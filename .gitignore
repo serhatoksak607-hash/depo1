@@ -13,5 +13,5 @@ tools/live-bridge/node_modules/
 tools/live-bridge/artifacts/
 tools/live-bridge/test-results/
 tools/live-bridge/*.png
-mobile/node_modules/
-mobile/dist/
+participant.app/node_modules/
+participant.app/dist/
