@@ -1,1 +1,7 @@
 .vercel
+node_modules
+dist
+vite-8080.log
+vite-8080.err.log
+
+.vercel

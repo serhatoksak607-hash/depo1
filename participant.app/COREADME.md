@@ -1,0 +1,9 @@
+# Core Notlari
+
+## QR ve Yolcu Havuzu Davranisi
+
+- `allow_project_cross_vehicle = true` ve `person_vehicle_restricted = false` ise yolcu havuzu proje bazinda ortak kabul edilmelidir.
+- Bu durumda yolcu herhangi bir uygun arac operasyonunda QR ile okutuldugunda veya manuel olarak islendiyse ayni projedeki diger arac listelerinden otomatik olarak dusmelidir.
+- Islenen yolcu mevcut operasyon kartinda ve QR ekraninda `Geldi` veya `Islendi` olarak gorunmeye devam etmelidir.
+- Ayni yolcu proje icindeki baska bir arac operasyonunda tekrar `uygun` olarak sunulmamalidir.
+- Core tarafinda bu davranisin ideal kaynagi operasyon bazli degil, proje kapsami ve yolcu bazli islenme kaydi olmalidir.

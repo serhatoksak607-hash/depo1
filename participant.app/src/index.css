@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 33% 92%;
+    --foreground: 210 60% 10%;
+
+    --card: 210 25% 95%;
+    --card-foreground: 210 60% 10%;
+
+    --popover: 210 25% 95%;
+    --popover-foreground: 210 60% 10%;
+
+    --primary: 210 55% 18%;
+    --primary-foreground: 200 80% 97%;
+
+    --secondary: 210 30% 88%;
+    --secondary-foreground: 210 55% 18%;
+
+    --muted: 210 20% 90%;
+    --muted-foreground: 205 20% 42%;
+
+    --accent: 45 64% 52%;
+    --accent-foreground: 210 60% 6%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 210 20% 85%;
+    --input: 210 20% 85%;
+    --ring: 45 64% 52%;
+
+    --radius: 0.75rem;
+
+    /* Ontur brand tokens */
+    --navy-900: 0 0% 12%;
+    --navy-800: 0 0% 16%;
+    --navy-700: 0 0% 20%;
+    --navy-600: 0 0% 26%;
+    --azure-500: 45 64% 52%;
+    --azure-400: 45 72% 62%;
+    --azure-300: 45 80% 74%;
+    --gold-500: 38 55% 55%;
+    --gold-400: 38 60% 65%;
+    --coral-500: 10 55% 55%;
+    --coral-400: 10 50% 65%;
+    --coral-300: 10 45% 75%;
+    --success: 155 55% 45%;
+    --warning: 38 85% 62%;
+    --danger: 0 70% 60%;
+
+    /* Surface tokens */
+    --surface-navy: 210 60% 8%;
+    --surface-card: 210 18% 96%;
+    --surface-card-hover: 210 18% 93%;
+
+    /* Boarding/Alighting colors */
+    --boarding: 205 65% 92%;
+    --boarding-accent: 205 65% 45%;
+    --alighting: 10 40% 92%;
+    --alighting-accent: 10 45% 55%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar for mobile feel */
+::-webkit-scrollbar {
+  width: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 999px;
+}
+
+.loading-bar {
+  animation: loading-slide 1.15s ease-in-out infinite;
+}
+
+@keyframes loading-slide {
+  0% {
+    transform: translateX(-105%);
+  }
+  55% {
+    transform: translateX(115%);
+  }
+  100% {
+    transform: translateX(115%);
+  }
+}
