@@ -16,7 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { api } from "./src/api";
 import {
-  API_BASE,
+  API_DISPLAY_LABEL,
   MODULE_ORDER,
   PARTICIPANT_CARD_COPY,
   PARTICIPANT_DEFAULTS,
@@ -120,6 +120,13 @@ function LoginView({ loading, onLogin }) {
         <Text style={styles.panelBody}>
           {"Hesab\u0131n\u0131zla oturum a\u00e7\u0131n. Proje se\u00e7ildi\u011finde toplant\u0131, rezervasyon ve duyuru ak\u0131\u015f\u0131 a\u00e7\u0131lacakt\u0131r."}
         </Text>
+        {api.isDemoMode ? (
+          <View style={styles.demoInfoCard}>
+            <Text style={styles.demoInfoTitle}>Demo Giriş</Text>
+            <Text style={styles.demoInfoText}>Kullanıcı: participant.demo</Text>
+            <Text style={styles.demoInfoText}>Şifre: participant.demo</Text>
+          </View>
+        ) : null}
         <TextInput
           style={styles.input}
           autoCapitalize="none"
@@ -145,7 +152,7 @@ function LoginView({ loading, onLogin }) {
             {loading ? "Giri\u015f yap\u0131l\u0131yor" : "Giri\u015f Yap"}
           </Text>
         </Pressable>
-        <Text style={styles.footnote}>API: {API_BASE}</Text>
+        <Text style={styles.footnote}>{`API: ${API_DISPLAY_LABEL}`}</Text>
       </View>
     </ScreenShell>
   );
@@ -673,6 +680,25 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: "#6E7D96",
     fontSize: 12,
+  },
+  demoInfoCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#D7E2F0",
+    backgroundColor: "#EEF4FF",
+    padding: 12,
+    marginBottom: 12,
+  },
+  demoInfoTitle: {
+    color: "#0F2858",
+    fontSize: 12,
+    fontWeight: "800",
+    marginBottom: 6,
+  },
+  demoInfoText: {
+    color: "#51637D",
+    fontSize: 12,
+    lineHeight: 18,
   },
   loaderScreen: {
     flex: 1,
