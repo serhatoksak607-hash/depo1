@@ -1,6 +1,23 @@
-export const API_BASE =
-  process.env.EXPO_PUBLIC_API_BASE ||
-  "http://127.0.0.1:8000";
+const DEFAULT_LOCAL_API_BASE = "http://127.0.0.1:3000";
+const DEFAULT_PRODUCTION_API_BASE = "https://www.micetro.org";
+
+function resolveApiBase() {
+  if (process.env.EXPO_PUBLIC_API_BASE) {
+    return process.env.EXPO_PUBLIC_API_BASE;
+  }
+
+  if (typeof window !== "undefined") {
+    const host = String(window.location.hostname || "").toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1") {
+      return DEFAULT_LOCAL_API_BASE;
+    }
+    return DEFAULT_PRODUCTION_API_BASE;
+  }
+
+  return DEFAULT_LOCAL_API_BASE;
+}
+
+export const API_BASE = resolveApiBase();
 
 export const PARTICIPANT_DEFAULTS = {
   appName: "Creatro Participant",
