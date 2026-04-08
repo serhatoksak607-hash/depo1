@@ -1,0 +1,17 @@
+{
+  "zumrut_operasyon": {
+    "label": "Zümrüt Operasyon",
+    "description": "Araç firması operasyon ekranları için dengeli yeşil ve altın tonları.",
+    "colors": ["#0d3934", "#24b389", "#e4c067"]
+  },
+  "lacivert_akis": {
+    "label": "Lacivert Akış",
+    "description": "Yoğun planlama ve tablo görünümü için daha kurumsal bir mavi aile.",
+    "colors": ["#16324f", "#4f8fda", "#d8a15f"]
+  },
+  "bakir_servis": {
+    "label": "Bakır Servis",
+    "description": "Premium hizmet ve sözleşme ağırlıklı firmalar için sıcak tonlu aile.",
+    "colors": ["#3d2a1f", "#c7743f", "#f0d39a"]
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "code": "binek_b",
+      "category": "BİNEK",
+      "seat_capacity_max": 9,
+      "required_license": "B",
+      "description": "Binek ve otomobil sınıfındaki araçlarda temel kural B sınıfıdır."
+    },
+    {
+      "code": "van_b",
+      "category": "VAN",
+      "seat_capacity_max": 9,
+      "required_license": "B",
+      "description": "Vito, Caravelle, Transporter benzeri 9 kişilik veya altı VAN araçlarda B sınıfı yeterlidir."
+    },
+    {
+      "code": "mini_b_or_d1",
+      "category": "MİNİ",
+      "seat_capacity_max": 9,
+      "required_license": "B",
+      "description": "MİNİ kategorisi araç 9 kişilik veya altındaysa B sınıfı kullanılabilir."
+    },
+    {
+      "code": "mini_d1",
+      "category": "MİNİ",
+      "seat_capacity_min": 10,
+      "seat_capacity_max": 17,
+      "required_license": "D1",
+      "description": "10-16 yolcu kapasiteli minibüslerde D1 sınıfı gerekir."
+    },
+    {
+      "code": "midi_d1",
+      "category": "MİDİ",
+      "seat_capacity_max": 17,
+      "required_license": "D1",
+      "description": "MİDİ kategorisinde 16 yolcuya kadar olan araçlarda D1 sınıfı gerekir."
+    },
+    {
+      "code": "midi_d",
+      "category": "MİDİ",
+      "seat_capacity_min": 18,
+      "required_license": "D",
+      "description": "MİDİ kategorisinde 16 yolcuyu aşan araçlarda D sınıfı gerekir."
+    },
+    {
+      "code": "bus_d",
+      "category": "BUS",
+      "required_license": "D",
+      "description": "Otobüs sınıfında temel kural D sınıfıdır."
+    },
+    {
+      "code": "trailer_be",
+      "category": "BİNEK",
+      "requires_trailer": true,
+      "required_license": "BE",
+      "description": "Binek araçla römork çekiliyorsa BE sınıfı gerekir."
+    },
+    {
+      "code": "trailer_c1e",
+      "category": "MİNİ",
+      "seat_capacity_min": 10,
+      "seat_capacity_max": 17,
+      "requires_trailer": true,
+      "required_license": "D1E",
+      "description": "Minibüs ve D1 sınıfı araçta römork varsa D1E gerekir."
+    },
+    {
+      "code": "trailer_de",
+      "category": "BUS",
+      "requires_trailer": true,
+      "required_license": "DE",
+      "description": "Otobüs ve römork kombinasyonunda DE gerekir."
+    }
+  ],
+  "model_hints": [
+    {
+      "match": ["VITO", "CARAVELLE", "TRANSPORTER", "MULTIVAN"],
+      "default_category": "VAN",
+      "default_license": "B"
+    },
+    {
+      "match": ["SPRINTER", "CRAFTER"],
+      "default_category": "MİNİ",
+      "default_license": "B/D1",
+      "note": "Araç koltuk sayısına göre B veya D1 gerekir."
+    },
+    {
+      "match": ["OTOKAR SULTAN", "ISUZU NOVO", "TEMSA PRESTIJ"],
+      "default_category": "MİDİ",
+      "default_license": "D1/D",
+      "note": "Araç koltuk sayısına göre D1 veya D gerekir."
+    },
+    {
+      "match": ["TRAVEGO", "TOURISMO", "SAFIR", "MARATON"],
+      "default_category": "BUS",
+      "default_license": "D"
+    }
+  ]
+}

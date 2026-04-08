@@ -1,0 +1,15 @@
+storage/uploads/*
+!storage/uploads/.gitkeep
+.env
+*.pyc
+__pycache__/
+exports/
+tmp_*.txt
+tmp_*.js
+tmp_*.html
+tmp_*.css
+_kayit_*.js
+tools/live-bridge/node_modules/
+tools/live-bridge/artifacts/
+tools/live-bridge/test-results/
+tools/live-bridge/*.png

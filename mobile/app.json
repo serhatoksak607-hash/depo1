@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Creatro Mobile",
+    "slug": "creatro-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A1024"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

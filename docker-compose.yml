@@ -1,0 +1,114 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: transfer_postgres
+    environment:
+      POSTGRES_DB: transfer_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d transfer_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: transfer_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: transfer_backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/transfer_db
+      REDIS_URL: redis://redis:6379/0
+      UPLOAD_DIR: /app/storage/uploads
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
+      APP_ENV: ${APP_ENV:-development}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-*}
+      COOKIE_SECURE: ${COOKIE_SECURE:-0}
+      COOKIE_SAMESITE: ${COOKIE_SAMESITE:-lax}
+      SESSION_IDLE_MINUTES: ${SESSION_IDLE_MINUTES:-1440}
+      WHATSAPP_SUPPORT_URL: ${WHATSAPP_SUPPORT_URL:-https://wa.me/905424794103}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMS_WEBHOOK_URL: ${SMS_WEBHOOK_URL:-}
+      APP_ADMIN_USER: ${APP_ADMIN_USER:-CreaTRO}
+      APP_ADMIN_PASS: ${APP_ADMIN_PASS:-CHANGE_ME}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:8000"
+    volumes:
+      - ./backend/app:/app/app
+      - ./storage/uploads:/app/storage/uploads
+
+  worker:
+    build:
+      context: ./backend
+    container_name: transfer_worker
+    command: ["python", "-m", "app.worker"]
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/transfer_db
+      REDIS_URL: redis://redis:6379/0
+      UPLOAD_DIR: /app/storage/uploads
+      RQ_QUEUE: upload_processing
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./storage/uploads:/app/storage/uploads
+
+  platform_core:
+    build:
+      context: ./backend
+    container_name: creatro_platform_core
+    command: ["uvicorn", "app.platform_core:app", "--host", "0.0.0.0", "--port", "8001"]
+    ports:
+      - "3001:8001"
+    volumes:
+      - ./backend/app:/app/app
+
+  fleet_domain:
+    build:
+      context: ./backend
+    container_name: creatro_fleet_domain
+    command: ["uvicorn", "app.fleet_domain:app", "--host", "0.0.0.0", "--port", "8002"]
+    ports:
+      - "3002:8002"
+    volumes:
+      - ./backend/app:/app/app
+
+  agency_domain:
+    build:
+      context: ./backend
+    container_name: creatro_agency_domain
+    command: ["uvicorn", "app.agency_domain:app", "--host", "0.0.0.0", "--port", "8003"]
+    ports:
+      - "3003:8003"
+    volumes:
+      - ./backend/app:/app/app
+
+volumes:
+  postgres_data:

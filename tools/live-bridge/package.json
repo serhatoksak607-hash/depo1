@@ -1,0 +1,15 @@
+{
+  "name": "creatro-live-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Localhost canli kontrol ve smoke test koprusu",
+  "scripts": {
+    "open:kayit": "node scripts/open-kayit-ui.js",
+    "open:transfer": "node scripts/open-transfer-ui.js",
+    "smoke:kayit": "playwright test tests/kayit-ui.spec.js --project=chromium",
+    "smoke:transfer": "playwright test tests/transfer-ui.spec.js --project=chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.2"
+  }
+}
