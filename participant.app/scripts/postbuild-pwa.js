@@ -14,7 +14,7 @@ if (!fs.existsSync(indexPath)) {
 const manifest = {
   name: "Creatro Participant",
   short_name: "Participant",
-  description: "Katılımcı uygulaması PWA sürümü",
+  description: "Kat\u0131l\u0131mc\u0131 uygulamas\u0131 PWA s\u00fcr\u00fcm\u00fc",
   lang: "tr",
   start_url: "/",
   scope: "/",
@@ -44,7 +44,7 @@ const offlineHtml = `<!DOCTYPE html>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#113876" />
-    <title>Participant Çevrimdışı</title>
+    <title>Participant \u00c7evrimd\u0131\u015f\u0131</title>
     <style>
       :root {
         color-scheme: light;
@@ -96,8 +96,8 @@ const offlineHtml = `<!DOCTYPE html>
   <body>
     <section class="card">
       <div class="eyebrow">Creatro Participant</div>
-      <h1>Şu anda çevrimdışısınız</h1>
-      <p>İnternet bağlantısı geldiğinde uygulama yeniden veri alacaktır. Daha önce açılan içerikler önbellekten gösterilmeye devam eder.</p>
+      <h1>\u015eu anda \u00e7evrimd\u0131\u015f\u0131s\u0131n\u0131z</h1>
+      <p>\u0130nternet ba\u011flant\u0131s\u0131 geldi\u011finde uygulama yeniden veri alacakt\u0131r. Daha \u00f6nce a\u00e7\u0131lan i\u00e7erikler \u00f6nbellekten g\u00f6sterilmeye devam eder.</p>
     </section>
   </body>
 </html>`;
@@ -182,7 +182,7 @@ let html = fs.readFileSync(indexPath, "utf8");
 html = html.replace('<html lang="en">', '<html lang="tr">');
 html = html.replace(
   "<noscript>\n      You need to enable JavaScript to run this app.\n    </noscript>",
-  "<noscript>\n      Bu uygulamayı çalıştırmak için JavaScript etkin olmalıdır.\n    </noscript>",
+  "<noscript>\n      Bu uygulamay\u0131 \u00e7al\u0131\u015ft\u0131rmak i\u00e7in JavaScript etkin olmal\u0131d\u0131r.\n    </noscript>",
 );
 
 const pwaHead = [
@@ -238,10 +238,10 @@ if (!html.includes('rel="manifest"')) {
 
 const installBannerHtml = [
   '  <div id="pwa-install-banner">',
-  '    <span>Participant uygulamasını ana ekrana ekleyebilirsiniz.</span>',
+  '    <span>Participant uygulamas\u0131n\u0131 ana ekrana ekleyebilirsiniz.</span>',
   '    <div>',
   '      <button id="pwa-install-dismiss" type="button">Daha Sonra</button>',
-  '      <button id="pwa-install-confirm" type="button">Yükle</button>',
+  '      <button id="pwa-install-confirm" type="button">Y\u00fckle</button>',
   "    </div>",
   "  </div>",
 ].join("\n");
