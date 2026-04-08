@@ -88,6 +88,10 @@ const appConfigsByRole: Record<Role, AppConfig> = {
     content: {
       app_title: "driver-greeter-aplication",
       home_title: "Ana Sayfa",
+      project_name: "Micetro İstanbul Zirvesi",
+      project_date_range: "12-15 Ekim 2026",
+      project_location: "İstanbul Kongre Merkezi",
+      project_qr_value: "PROJECT:micetro-istanbul-zirvesi-2026|PARTICIPANT:Serhat-OKSAK",
       empty_state_texts: {
         alerts: "Şuan herşey yolunda...",
         notifications: "Tüm bildirimleri okudunuz.",
@@ -160,6 +164,10 @@ const appConfigsByRole: Record<Role, AppConfig> = {
     content: {
       app_title: "driver-greeter-aplication",
       home_title: "Ana Sayfa",
+      project_name: "Micetro İstanbul Zirvesi",
+      project_date_range: "12-15 Ekim 2026",
+      project_location: "İstanbul Kongre Merkezi",
+      project_qr_value: "PROJECT:micetro-istanbul-zirvesi-2026|PARTICIPANT:Serhat-OKSAK",
       empty_state_texts: {
         alerts: "Şuan herşey yolunda...",
         notifications: "Tüm bildirimleri okudunuz.",

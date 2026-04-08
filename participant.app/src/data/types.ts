@@ -114,6 +114,10 @@ export interface ContentConfig {
   empty_state_texts?: Record<string, string>;
   action_labels?: Record<string, string>;
   support_labels?: Record<string, string>;
+  project_name?: string | null;
+  project_date_range?: string | null;
+  project_location?: string | null;
+  project_qr_value?: string | null;
 }
 
 export interface PolicyBundleConfig {

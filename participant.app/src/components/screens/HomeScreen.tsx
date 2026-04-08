@@ -13,17 +13,6 @@ interface HomeScreenProps {
   appConfig: AppConfig;
 }
 
-function formatPlateLabel(value: string) {
-  const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const match = cleaned.match(/^(\d{2})([A-Z]{1,3})(\d{2,4})$/);
-
-  if (match) {
-    return `${match[1]} ${match[2]} ${match[3]}`;
-  }
-
-  return value.trim().toUpperCase();
-}
-
 export function HomeScreen({
   onOpenTab,
   onOpenAlerts,
@@ -39,6 +28,9 @@ export function HomeScreen({
   const brandPrimary = appConfig.branding.primary_color || "#58C7F2";
   const brandBase = appConfig.branding.base_color || "#091028";
   const modules = appConfig.modules;
+  const projectName = appConfig.content.project_name || "Proje Adı";
+  const projectDateRange = appConfig.content.project_date_range || "Tarih Aralığı";
+  const projectLocation = appConfig.content.project_location || "Konum";
   const isModuleVisible = (moduleKey: string) =>
     modules.project_modules[moduleKey]?.visible ??
     modules.company_modules[moduleKey]?.visible ??
@@ -49,10 +41,9 @@ export function HomeScreen({
   const showOperations = isModuleVisible("operations");
   const showFiles = isModuleVisible("files");
   const showExpenses = isModuleVisible("expenses");
-  const plateMain = formatPlateLabel(profile.plate_label || "");
-  const driverName = formatPersonName(profile.full_name || "");
+  const userName = formatPersonName(profile.full_name || "");
   const roleLabel =
-    role === "greeter" ? "Karşılamacı" : role === "driver" ? "Sürücü" : "Operasyon Sorumlusu";
+    role === "greeter" ? "Karşılamacı" : role === "driver" ? "Katılımcı" : "Operasyon Sorumlusu";
 
   return (
     <div className="flex flex-col gap-3 px-4 pb-[8px] pt-0">
@@ -64,20 +55,18 @@ export function HomeScreen({
           <p className="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {roleLabel}
           </p>
-          <p className="truncate text-sm font-bold text-foreground">{driverName}</p>
+          <p className="truncate text-sm font-bold text-foreground">{userName}</p>
         </div>
-        <div className="flex min-w-[118px] flex-col items-end gap-1">
-          <p className="max-w-full truncate text-[11px] font-medium text-muted-foreground">
-            {profile.vehicle_label}
+        <div className="flex min-w-[170px] flex-col items-end text-right">
+          <p className="max-w-full truncate text-[11px] font-semibold text-foreground">
+            {projectName}
           </p>
-          <div className="flex items-stretch overflow-hidden rounded-sm border-2 border-slate-400 bg-white shadow-sm">
-            <div className="flex w-4 items-end justify-center bg-[#1D4ED8] px-1 pb-0.5 text-white">
-              <span className="text-[6px] font-black leading-none tracking-[0.04em]">TR</span>
-            </div>
-            <div className="flex min-h-[22px] items-center px-1.5 text-[10px] font-black tracking-[0.1em] text-slate-900">
-              {plateMain}
-            </div>
-          </div>
+          <p className="mt-0.5 max-w-full truncate text-[10px] font-medium text-muted-foreground">
+            {projectDateRange}
+          </p>
+          <p className="mt-0.5 max-w-full truncate text-[10px] font-medium text-muted-foreground">
+            {projectLocation}
+          </p>
         </div>
       </div>
 
@@ -88,7 +77,7 @@ export function HomeScreen({
         <span className="h-2.5 w-2.5 rounded-full bg-gold-500" />
         <div>
           <p className="text-sm font-semibold text-foreground">
-            {hasAlerts ? `${unreadAlerts} okunmayan uyarı var` : "Şuan herşey yolunda..."}
+            {hasAlerts ? `${unreadAlerts} okunmayan uyarı var` : "Şu an her şey yolunda..."}
           </p>
         </div>
       </button>
@@ -125,7 +114,7 @@ export function HomeScreen({
               </div>
               <div>
                 <p className="text-sm font-bold text-foreground">QR Okut</p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">Hızlı biniş</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">Proje QR ekranı</p>
               </div>
             </button>
           )}
@@ -169,7 +158,7 @@ export function HomeScreen({
           <div className="relative h-36 w-full">
             <img
               src={heroImage}
-              alt="Transfer aracı"
+              alt="Hero görseli"
               className="h-full w-full object-cover"
               loading="eager"
               fetchPriority="high"
