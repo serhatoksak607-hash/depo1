@@ -31,6 +31,29 @@ Dogru kullanim:
 - calisan ana sistem: Docker destekli sunucu veya VPS
 - Vercel: ancak ileride ayri bir frontend cikarsa
 
+## Urun Mimarisi
+
+Bu platform tek uygulama gibi gorunse de urun ailesi olarak ayrismalidir:
+
+- `Core / Cekirdek`
+  kimlik, proje, yetki, tema, sponsor, bildirim ve ortak veri katmani
+- `SaaS Yonetim Uygulamasi`
+  tenant/acente yonetimi, paketler, entegrasyonlar, destek ve platform ayarlari
+- `Acente / Operasyon Web Uygulamasi`
+  kayit, konaklama, transfer, toplanti, tercuman, duyurular, muhasebe ve yonetim
+- `Arac Operasyon Web Uygulamasi`
+  arac planlama, surucu atama, rota, doluluk ve transfer operasyon akisi
+- `Participant Uygulamasi`
+  katilimci odakli toplanti, rezervasyonlar, duyurular, QR ve sponsor akislari
+- `Surucu Uygulamasi`
+  gorevler, yolcu listesi, rota, QR ve durum guncelleme
+- `Greeter Uygulamasi`
+  karsilama listesi, QR, bildirim ve yonlendirme akisi
+
+Su an net ayrim:
+- `http://localhost:3000` acente / operasyon web sistemi
+- `participant.app` participant istemcisi
+
 ## Participant Uygulamasi
 
 Repo içinde Expo tabanlı bir participant istemcisi de bulunur:
