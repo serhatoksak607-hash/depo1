@@ -1,25 +1,19 @@
 import { QrCode } from "lucide-react";
-import type { Role } from "@/data/types";
+import type { ProjectSummary, Role } from "@/data/types";
 import { getCoreBootstrap } from "@/services/core";
 
 interface QrCheckinScreenProps {
   synced?: boolean;
   role: Role;
+  selectedProject: ProjectSummary;
 }
 
-export function QrCheckinScreen({ role }: QrCheckinScreenProps) {
+export function QrCheckinScreen({ role, selectedProject }: QrCheckinScreenProps) {
   const bootstrap = getCoreBootstrap(role);
-  const { appConfig, operations } = bootstrap;
+  const { appConfig } = bootstrap;
   const brandPrimary = appConfig.branding.primary_color || "#58C7F2";
   const brandBase = appConfig.branding.base_color || "#091028";
-  const activeOperation = operations[0];
-  const projectName = appConfig.content.project_name || activeOperation?.project_name || "Proje";
-  const projectDateRange = appConfig.content.project_date_range || "Tarih bilgisi eklenecek";
-  const projectLocation = appConfig.content.project_location || activeOperation?.start_location || "Konum eklenecek";
-  const projectQrValue =
-    appConfig.content.project_qr_value ||
-    `PROJECT:${appConfig.project_id || "default"}|ROLE:${role}|PERSON:Serhat-OKSAK`;
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(projectQrValue)}`;
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(selectedProject.qrValue)}`;
 
   return (
     <div className="flex flex-col gap-3 px-4 pb-6">
@@ -39,7 +33,7 @@ export function QrCheckinScreen({ role }: QrCheckinScreenProps) {
           </div>
         </div>
         <p className="mt-4 text-sm leading-6 text-muted-foreground">
-          Bu ekranda tarayıcı açılmaz. Katılımcının projeye ait QR kodu doğrudan gösterilir.
+          Bu ekranda tarayıcı açılmaz. Katılımcının seçili projeye ait QR kodu doğrudan gösterilir.
         </p>
       </div>
 
@@ -52,7 +46,7 @@ export function QrCheckinScreen({ role }: QrCheckinScreenProps) {
             <div className="rounded-2xl bg-white p-4 shadow-sm">
               <img
                 src={qrImageUrl}
-                alt={`${projectName} proje QR kodu`}
+                alt={`${selectedProject.name} proje QR kodu`}
                 className="mx-auto aspect-square w-full max-w-[280px] rounded-xl object-contain"
                 loading="eager"
               />
@@ -64,11 +58,11 @@ export function QrCheckinScreen({ role }: QrCheckinScreenProps) {
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
             Proje Bilgisi
           </p>
-          <p className="mt-2 text-base font-bold text-foreground">{projectName}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{projectDateRange}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{projectLocation}</p>
+          <p className="mt-2 text-base font-bold text-foreground">{selectedProject.name}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{selectedProject.dateRange}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{selectedProject.location}</p>
           <p className="mt-3 break-all rounded-xl bg-card px-3 py-2 text-[11px] text-muted-foreground">
-            {projectQrValue}
+            {selectedProject.qrValue}
           </p>
         </div>
       </div>

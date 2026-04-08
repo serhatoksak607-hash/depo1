@@ -1,25 +1,29 @@
 import React from "react";
 import { Bell, FolderOpen, Navigation, QrCode, Receipt } from "lucide-react";
-import type { AppConfig, Role, TabKey } from "@/data/types";
+import type { AppConfig, ProjectSummary, Role, TabKey } from "@/data/types";
 import { formatPersonName } from "@/lib/utils";
 import { getShellProfile } from "@/services/core";
 
 interface HomeScreenProps {
   onOpenTab: (tab: TabKey) => void;
   onOpenAlerts: () => void;
+  onOpenProjectPicker: () => void;
   unreadNotifications: number;
   unreadAlerts: number;
   role: Role;
   appConfig: AppConfig;
+  selectedProject: ProjectSummary;
 }
 
 export function HomeScreen({
   onOpenTab,
   onOpenAlerts,
+  onOpenProjectPicker,
   unreadNotifications,
   unreadAlerts,
   role,
   appConfig,
+  selectedProject,
 }: HomeScreenProps) {
   const hasUnread = unreadNotifications > 0;
   const profile = getShellProfile(role);
@@ -28,9 +32,6 @@ export function HomeScreen({
   const brandPrimary = appConfig.branding.primary_color || "#58C7F2";
   const brandBase = appConfig.branding.base_color || "#091028";
   const modules = appConfig.modules;
-  const projectName = appConfig.content.project_name || "Proje Adı";
-  const projectDateRange = appConfig.content.project_date_range || "Tarih Aralığı";
-  const projectLocation = appConfig.content.project_location || "Konum";
   const isModuleVisible = (moduleKey: string) =>
     modules.project_modules[moduleKey]?.visible ??
     modules.company_modules[moduleKey]?.visible ??
@@ -57,17 +58,21 @@ export function HomeScreen({
           </p>
           <p className="truncate text-sm font-bold text-foreground">{userName}</p>
         </div>
-        <div className="flex min-w-[170px] flex-col items-end text-right">
+        <button
+          type="button"
+          onClick={onOpenProjectPicker}
+          className="flex min-w-[170px] flex-col items-end text-right transition-opacity hover:opacity-80"
+        >
           <p className="max-w-full truncate text-[11px] font-semibold text-foreground">
-            {projectName}
+            {selectedProject.name}
           </p>
           <p className="mt-0.5 max-w-full truncate text-[10px] font-medium text-muted-foreground">
-            {projectDateRange}
+            {selectedProject.dateRange}
           </p>
           <p className="mt-0.5 max-w-full truncate text-[10px] font-medium text-muted-foreground">
-            {projectLocation}
+            {selectedProject.location}
           </p>
-        </div>
+        </button>
       </div>
 
       <button

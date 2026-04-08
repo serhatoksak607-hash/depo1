@@ -156,6 +156,14 @@ export interface ShellProfile {
   plate_label: string;
 }
 
+export interface ProjectSummary {
+  id: string;
+  name: string;
+  dateRange: string;
+  location: string;
+  qrValue: string;
+}
+
 export interface DynamicQrPolicy {
   enabled: boolean;
   intervalSeconds: number;

@@ -1,13 +1,30 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, Bell, ClipboardList, Home, Navigation, QrCode } from "lucide-react";
-import type { Role, TabKey } from "@/data/types";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Bell,
+  Check,
+  ChevronRight,
+  ClipboardList,
+  Home,
+  Navigation,
+  QrCode,
+} from "lucide-react";
+import type { ProjectSummary, Role, TabKey } from "@/data/types";
 import { HomeScreen } from "@/components/screens/HomeScreen";
 import { OperationsScreen } from "@/components/screens/OperationsScreen";
 import { JobsScreen } from "@/components/screens/JobsScreen";
 import brandFallbackLogo from "@/assets/brand/Ontur.png";
 import creatroLogo from "@/assets/brand/kontrast_logo.png";
 import { toast } from "@/components/ui/sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getAppConfig, getCoreBootstrap } from "@/services/core";
 import { useAppState } from "@/state/app-state";
 
@@ -20,11 +37,13 @@ const FilesScreen = lazy(() =>
 const QrCheckinScreen = lazy(() =>
   import("@/components/screens/QrCheckinScreen").then((module) => ({ default: module.QrCheckinScreen })),
 );
+
 const notificationItems = [
   { id: 1, title: "Uçuş saati güncellendi", detail: "PC2012 için yeni bilgilendirme var." },
   { id: 2, title: "Yeni dosya eklendi", detail: "Transfer evrakları güncellendi." },
   { id: 3, title: "Masraf durumu değişti", detail: "Gönderilen masraf kontrol bekliyor." },
 ];
+
 const alertItems = [
   { id: 1, title: "Transfer saati değişti", detail: "09:30 transferi 09:50 olarak güncellendi." },
   { id: 2, title: "Uçuş saati değişti", detail: "PC2012 uçuşu 10 dakikanın üzerinde değişti." },
@@ -115,9 +134,41 @@ function ScreenFallback({ role }: { role: Role }) {
   );
 }
 
+function buildProjectOptions(role: Role): ProjectSummary[] {
+  const appConfig = getAppConfig(role);
+  const primaryProject: ProjectSummary = {
+    id: appConfig.project_id || "micetro-istanbul-zirvesi",
+    name: appConfig.content.project_name || "Micetro İstanbul Zirvesi",
+    dateRange: appConfig.content.project_date_range || "12-15 Ekim 2026",
+    location: appConfig.content.project_location || "İstanbul Kongre Merkezi",
+    qrValue:
+      appConfig.content.project_qr_value ||
+      `PROJECT:${appConfig.project_id || "micetro-istanbul-zirvesi"}|ROLE:${role}|PERSON:Serhat-OKSAK`,
+  };
+
+  return [
+    primaryProject,
+    {
+      id: "global-saglik-forumu-2026",
+      name: "Global Sağlık Forumu",
+      dateRange: "21-23 Kasım 2026",
+      location: "Antalya Gloria Kongre Merkezi",
+      qrValue: "PROJECT:global-saglik-forumu-2026|ROLE:participant|PERSON:Serhat-OKSAK",
+    },
+    {
+      id: "cof-executive-summit-2026",
+      name: "COF Executive Summit",
+      dateRange: "04-06 Aralık 2026",
+      location: "İzmir Swissôtel Büyük Efes",
+      qrValue: "PROJECT:cof-executive-summit-2026|ROLE:participant|PERSON:Serhat-OKSAK",
+    },
+  ];
+}
+
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("home");
   const [role, setRole] = useState<Role>("driver");
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const [selectedNotificationId, setSelectedNotificationId] = useState<number | null>(null);
   const [selectedAlertId, setSelectedAlertId] = useState<number | null>(null);
@@ -130,11 +181,15 @@ const Index = () => {
   } = useAppState();
   const isOnline = true;
   const appConfig = getAppConfig(role);
+  const projectOptions = useMemo(() => buildProjectOptions(role), [role]);
+  const [selectedProjectId, setSelectedProjectId] = useState(projectOptions[0]?.id || "");
   const { data: bootstrap } = useQuery({
     queryKey: ["core", "bootstrap", role],
     queryFn: async () => getCoreBootstrap(role),
     staleTime: Infinity,
   });
+  const selectedProject =
+    projectOptions.find((project) => project.id === selectedProjectId) || projectOptions[0];
   const brandBg = appConfig.branding.base_color || "#091028";
   const headerLogo = appConfig.branding.logo_url || brandFallbackLogo;
   const lastSyncText = formatLastSyncText(bootstrap?.syncedAt);
@@ -146,6 +201,7 @@ const Index = () => {
   const selectedNotification =
     notificationItems.find((item) => item.id === selectedNotificationId) ?? null;
   const selectedAlert = alertItems.find((item) => item.id === selectedAlertId) ?? null;
+
   const tabs = useMemo(
     () =>
       appConfig.navigation.tab_items
@@ -160,11 +216,13 @@ const Index = () => {
         })),
     [appConfig.navigation.tab_items, notificationBadgeLabel],
   );
+
   const allowedRoutes = useMemo(
-    () => new Set<TabKey>([
-      ...tabs.map((tab) => tab.key),
-      ...((appConfig.navigation.hidden_routes || []) as TabKey[]),
-    ]),
+    () =>
+      new Set<TabKey>([
+        ...tabs.map((tab) => tab.key),
+        ...((appConfig.navigation.hidden_routes || []) as TabKey[]),
+      ]),
     [appConfig.navigation.hidden_routes, tabs],
   );
 
@@ -172,6 +230,12 @@ const Index = () => {
     if (allowedRoutes.has(activeTab)) return;
     setActiveTab((appConfig.navigation.home_route as TabKey) || "home");
   }, [activeTab, allowedRoutes, appConfig.navigation.home_route]);
+
+  useEffect(() => {
+    if (!projectOptions.some((project) => project.id === selectedProjectId) && projectOptions[0]) {
+      setSelectedProjectId(projectOptions[0].id);
+    }
+  }, [projectOptions, selectedProjectId]);
 
   const handleTabChange = (nextTab: TabKey) => {
     if (nextTab === activeTab) return;
@@ -194,7 +258,6 @@ const Index = () => {
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col overflow-hidden bg-background">
-      {/* Header */}
       <header className="flex-shrink-0 border-b border-border" style={{ backgroundColor: brandBg }}>
         <div className="flex h-[84px] items-center justify-center px-4">
           <img
@@ -207,7 +270,9 @@ const Index = () => {
         </div>
         {activeTab !== "home" && (
           <div className="flex items-center justify-between px-4 pb-3">
-            <h1 className={`text-base font-bold uppercase tracking-[0.12em] ${tabColorMap[activeTab] ?? "text-primary-foreground"}`}>{tabTitles[activeTab]}</h1>
+            <h1 className={`text-base font-bold uppercase tracking-[0.12em] ${tabColorMap[activeTab] ?? "text-primary-foreground"}`}>
+              {tabTitles[activeTab]}
+            </h1>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setRole(role === "driver" ? "greeter" : "driver")}
@@ -221,8 +286,8 @@ const Index = () => {
       </header>
 
       <main className="flex-1 overflow-y-auto overflow-x-hidden pt-[9px]">
-        {activeTab === "home" && (
-          alertsViewOpen ? (
+        {activeTab === "home" &&
+          (alertsViewOpen ? (
             <div className="space-y-2.5 px-4 py-4">
               {selectedAlert ? (
                 <div className="rounded-3xl border border-gold-500/20 bg-card p-5">
@@ -281,13 +346,15 @@ const Index = () => {
             <HomeScreen
               onOpenTab={handleTabChange}
               onOpenAlerts={handleOpenAlerts}
+              onOpenProjectPicker={() => setIsProjectDialogOpen(true)}
               unreadNotifications={unreadNotifications}
               unreadAlerts={unreadAlerts}
               role={role}
               appConfig={appConfig}
+              selectedProject={selectedProject}
             />
-          )
-        )}
+          ))}
+
         {activeTab === "operations" && <OperationsScreen role={role} onPendingSyncChange={setPendingSyncCount} />}
         {activeTab === "jobs" && <JobsScreen role={role} onOpenTab={handleTabChange} />}
         {activeTab === "expenses" && (
@@ -302,7 +369,7 @@ const Index = () => {
         )}
         {activeTab === "qr-checkin" && (
           <Suspense fallback={<ScreenFallback role={role} />}>
-            <QrCheckinScreen role={role} />
+            <QrCheckinScreen role={role} selectedProject={selectedProject} />
           </Suspense>
         )}
         {activeTab === "notifications" && (
@@ -352,9 +419,55 @@ const Index = () => {
         )}
       </main>
 
+      <Dialog open={isProjectDialogOpen} onOpenChange={setIsProjectDialogOpen}>
+        <DialogContent className="max-w-[360px] rounded-[28px] border-none p-0">
+          <DialogHeader className="border-b border-border px-5 py-4 text-left">
+            <DialogTitle>Projeler</DialogTitle>
+            <DialogDescription>
+              Katılımcı olarak geçiş yapmak istediğiniz projeyi seçin.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-3 py-3">
+            <div className="flex flex-col gap-2">
+              {projectOptions.map((project) => {
+                const isSelected = project.id === selectedProject?.id;
+                return (
+                  <button
+                    key={project.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedProjectId(project.id);
+                      setIsProjectDialogOpen(false);
+                    }}
+                    className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition-colors ${
+                      isSelected
+                        ? "border-azure-500/30 bg-azure-500/10"
+                        : "border-border bg-card active:bg-secondary"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-foreground">{project.name}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">{project.dateRange}</p>
+                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{project.location}</p>
+                    </div>
+                    <div className="ml-3 flex h-9 w-9 items-center justify-center">
+                      {isSelected ? (
+                        <Check className="h-5 w-5 text-azure-500" />
+                      ) : (
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <nav className="flex-shrink-0 border-t border-border bg-card/95 px-2 pb-2 pt-2 backdrop-blur">
         <div className="flex items-stretch gap-1">
-          {tabs.map(tab => {
+          {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
             return (
               <button
@@ -369,7 +482,9 @@ const Index = () => {
                 <div className="relative">
                   <tab.icon className={`h-5 w-5 ${isActive ? tab.activeColor : ""}`} />
                   {tab.badge && (
-                    <span className="absolute -top-1.5 -right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[8px] font-bold text-white">{tab.badge}</span>
+                    <span className="absolute -top-1.5 -right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[8px] font-bold text-white">
+                      {tab.badge}
+                    </span>
                   )}
                 </div>
                 <span className="text-[9px] font-bold">{tab.label}</span>
