@@ -99,8 +99,8 @@ function LoginView({ loading, onLogin }) {
     <ScreenShell
       theme={theme}
       eyebrow={PARTICIPANT_DEFAULTS.appName}
-      title="Katilimci Uygulamasi"
-      subtitle="Acenta logosu varsayilan gelir. Alt proje gorseli tanimliysa login ve header alaninda onu kullanir."
+      title="Katılımcı Uygulaması"
+      subtitle="Acente logosu varsayılan gelir. Alt proje görseli tanımlıysa login ve header alanında onu kullanır."
       rightText={PARTICIPANT_DEFAULTS.loginHeroCode}
       footerText={`${branding.projectName} Banner`}
     >
@@ -109,19 +109,19 @@ function LoginView({ loading, onLogin }) {
           <Text style={styles.logoBadgeText}>{branding.activeLogoLabel}</Text>
         </View>
         <Text style={styles.logoHint}>
-          Tema onceligi acenta renkleri. Proje tema renkleri tanimliysa onlar ustune yazar.
+          Tema önceliği acente renkleri. Proje tema renkleri tanımlıysa onlar üstüne yazar.
         </Text>
       </View>
 
       <View style={styles.panel}>
-        <Text style={styles.panelTitle}>Giris</Text>
+        <Text style={styles.panelTitle}>Giriş</Text>
         <Text style={styles.panelBody}>
-          Hesabinizla oturum acin. Proje secildiginde toplanti, rezervasyon ve duyuru akisi acilacaktir.
+          Hesabınızla oturum açın. Proje seçildiğinde toplantı, rezervasyon ve duyuru akışı açılacaktır.
         </Text>
         <TextInput
           style={styles.input}
           autoCapitalize="none"
-          placeholder="Kullanici adi"
+          placeholder="Kullanıcı adı"
           placeholderTextColor="#7C8CA5"
           value={username}
           onChangeText={setUsername}
@@ -129,7 +129,7 @@ function LoginView({ loading, onLogin }) {
         <TextInput
           style={styles.input}
           secureTextEntry
-          placeholder="Sifre"
+          placeholder="Şifre"
           placeholderTextColor="#7C8CA5"
           value={password}
           onChangeText={setPassword}
@@ -139,7 +139,7 @@ function LoginView({ loading, onLogin }) {
           disabled={loading}
           onPress={() => onLogin(username.trim(), password)}
         >
-          <Text style={styles.primaryBtnText}>{loading ? "Giris yapiliyor" : "Giris Yap"}</Text>
+          <Text style={styles.primaryBtnText}>{loading ? "Giriş yapılıyor" : "Giriş Yap"}</Text>
         </Pressable>
         <Text style={styles.footnote}>API: {API_BASE}</Text>
       </View>
@@ -161,7 +161,7 @@ function ProjectSelectView({ token, onSelected, me }) {
         if (!active) return;
         setProjects((list || []).filter((item) => item && item.is_active));
       } catch (err) {
-        Alert.alert("Proje Hatasi", err.message);
+        Alert.alert("Proje Hatası", err.message);
       } finally {
         if (active) setLoading(false);
       }
@@ -175,14 +175,14 @@ function ProjectSelectView({ token, onSelected, me }) {
     <ScreenShell
       theme={theme}
       eyebrow={branding.agencyName}
-      title="Aktif Proje Secimi"
-      subtitle="Katilimci arayuzu proje bazli acilir. Acenta logosu veya proje gorseli secime gore ustte gosterilir."
+      title="Aktif Proje Seçimi"
+      subtitle="Katılımcı arayüzü proje bazlı açılır. Acente logosu veya proje görseli seçime göre üstte gösterilir."
       rightText={me?.role ? String(me.role).toUpperCase() : "PROJECT"}
       footerText={`${branding.footerBanner} Footer`}
     >
       <View style={styles.panel}>
         <Text style={styles.panelTitle}>Proje Listesi</Text>
-        <Text style={styles.panelBody}>Secim yaptiginiz anda participant akisi acilir.</Text>
+        <Text style={styles.panelBody}>Seçim yaptığınız anda participant akışı açılır.</Text>
         {loading ? (
           <View style={styles.loaderWrap}>
             <ActivityIndicator size="large" color={theme.base} />
@@ -196,8 +196,8 @@ function ProjectSelectView({ token, onSelected, me }) {
                 onPress={() => onSelected(project.id)}
               >
                 <Text style={styles.projectCode}>{project.operation_code || "-"}</Text>
-                <Text style={styles.projectName}>{project.name || "Adsiz Proje"}</Text>
-                <Text style={styles.projectMeta}>Projeyi aktiflestir</Text>
+                <Text style={styles.projectName}>{project.name || "Adsız Proje"}</Text>
+                <Text style={styles.projectMeta}>Projeyi aktifleştir</Text>
               </Pressable>
             ))}
           </ScrollView>
@@ -244,7 +244,7 @@ function HomeView({ me, onLogout }) {
   const openModuleByKey = async (key, fallbackPath) => {
     const href = moduleByKey.get(key)?.href || fallbackPath;
     if (!href) {
-      Alert.alert("Modul Yok", "Bu alan henuz baglanmadi.");
+      Alert.alert("Modül Yok", "Bu alan henüz bağlanmadı.");
       return;
     }
     const url = `${API_BASE}${href}`;
@@ -253,7 +253,7 @@ function HomeView({ me, onLogout }) {
       if (!supported) throw new Error(url);
       await Linking.openURL(url);
     } catch (err) {
-      Alert.alert("Baglanti Acilamadi", err.message || url);
+      Alert.alert("Bağlantı Açılamadı", err.message || url);
     }
   };
 
@@ -266,28 +266,28 @@ function HomeView({ me, onLogout }) {
       await openModuleByKey("transfer", "/transfer-ui");
       return;
     }
-    Alert.alert("Rezervasyonlarim", "Transfer veya konaklama baglantisi henuz tanimli degil.");
+    Alert.alert("Rezervasyonlarım", "Transfer veya konaklama bağlantısı henüz tanımlı değil.");
   };
 
   const sponsorThankYouNote =
-    "QR okutuldugunda transfer icin transfer sponsoru; kayit veya konaklama icin ilgili sponsor tesekkur gorseli acilacak.";
+    "QR okutulduğunda transfer için transfer sponsoru; kayıt veya konaklama için ilgili sponsor teşekkür görseli açılacak.";
 
   return (
     <ScreenShell
       theme={theme}
       eyebrow={branding.activeLogoLabel}
       title={branding.projectName}
-      subtitle="Toplanti odakli participant arayuzu. Hero kartta Toplanti Modulu, alt akslarda rezervasyon ve duyuru alanlari var."
+      subtitle="Toplantı odaklı participant arayüzü. Hero kartta Toplantı Modülü, alt akslarda rezervasyon ve duyuru alanları var."
       rightText={me?.active_project_code || "ACTIVE"}
       footerText={`${branding.footerBanner} Footer`}
     >
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.identityCard}>
           <View style={styles.identityMain}>
-            <Text style={styles.identityLabel}>Acenta / Proje Gorseli</Text>
+            <Text style={styles.identityLabel}>Acente / Proje Görseli</Text>
             <Text style={styles.identityTitle}>{branding.activeLogoLabel}</Text>
             <Text style={styles.identityHint}>
-              Acenta logosu varsayilan. Alt proje gorseli tanimliysa header ve login tarafinda onu goster.
+              Acente logosu varsayılan. Alt proje görseli tanımlıysa header ve login tarafında onu göster.
             </Text>
           </View>
           <View style={[styles.sponsorBadge, { borderColor: `${theme.primary}45`, backgroundColor: `${theme.secondary}26` }]}>
@@ -301,14 +301,14 @@ function HomeView({ me, onLogout }) {
           onPress={() => openModuleByKey("toplanti", "/toplanti-ui")}
         >
           <View style={styles.heroVisual}>
-            <Text style={styles.heroVisualEyebrow}>Toplanti Gorseli</Text>
+            <Text style={styles.heroVisualEyebrow}>Toplantı Görseli</Text>
             <Text style={styles.heroVisualTitle}>{branding.projectVisual}</Text>
           </View>
           <View style={styles.heroModuleContent}>
-            <Text style={[styles.heroModuleLabel, { color: theme.secondary }]}>Toplanti Modulu</Text>
+            <Text style={[styles.heroModuleLabel, { color: theme.secondary }]}>Toplantı Modülü</Text>
             <Text style={styles.heroModuleTitle}>{PARTICIPANT_CARD_COPY.oturumlar}</Text>
             <Text style={styles.heroModuleBody}>
-              Orta hero kartta oturumlar acilir. Alttaki alt kartlar program akisi, bildiriler, sertifikalar ve kurslar icin ayrildi.
+              Orta hero kartta oturumlar açılır. Alttaki alt kartlar program akışı, bildiriler, sertifikalar ve kurslar için ayrıldı.
             </Text>
           </View>
         </Pressable>
@@ -316,46 +316,46 @@ function HomeView({ me, onLogout }) {
         <View style={styles.featureGrid}>
           <ActionCard
             title={PARTICIPANT_CARD_COPY.program}
-            body="Gun ici akisi ve salon zamanlari."
-            meta="Toplanti"
+            body="Gün içi akışı ve salon zamanları."
+            meta="Toplantı"
             onPress={() => openModuleByKey("toplanti", "/toplanti-ui")}
           />
           <ActionCard
             title={PARTICIPANT_CARD_COPY.bildiriler}
-            body="Sunum ve bildiri iceriklerine giris."
-            meta="Toplanti"
+            body="Sunum ve bildiri içeriklerine giriş."
+            meta="Toplantı"
             onPress={() => openModuleByKey("toplanti", "/toplanti-ui")}
           />
           <ActionCard
             title={PARTICIPANT_CARD_COPY.kurslar}
-            body="Kurs listesi ve uygun kayit akisi."
-            meta="Toplanti"
+            body="Kurs listesi ve uygun kayıt akışı."
+            meta="Toplantı"
             onPress={() => openModuleByKey("toplanti", "/toplanti-ui")}
           />
           <ActionCard
             title={PARTICIPANT_CARD_COPY.sertifikalar}
-            body="Katilim ve kurs sertifika alanlari."
-            meta="Toplanti"
+            body="Katılım ve kurs sertifika alanları."
+            meta="Toplantı"
             onPress={() => openModuleByKey("toplanti", "/toplanti-ui")}
           />
         </View>
 
         <View style={styles.sectionHead}>
-          <Text style={styles.sectionTitle}>Katilimci Alanlari</Text>
+          <Text style={styles.sectionTitle}>Katılımcı Alanları</Text>
           <Text style={styles.sectionMeta}>{modules.length} erisim alani</Text>
         </View>
 
         <View style={styles.featureGrid}>
           <ActionCard
             title={PARTICIPANT_CARD_COPY.rezervasyonlarim}
-            body="Transfer ve konaklama detaylarini gor, gerekirse degisiklik iste."
+            body="Transfer ve konaklama detaylarını gör, gerekirse değişiklik iste."
             meta="Transfer + Konaklama"
             onPress={openReservationArea}
             span="full"
           />
           <ActionCard
             title={PARTICIPANT_CARD_COPY.duyurular}
-            body="Kongre duyurulari, acil mesajlar ve son bilgilendirmeler."
+            body="Kongre duyuruları, acil mesajlar ve son bilgilendirmeler."
             meta="Duyurular"
             onPress={() => openModuleByKey("duyurular", "/duyurular-ui")}
           />
@@ -368,9 +368,9 @@ function HomeView({ me, onLogout }) {
         </View>
 
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Katilimci Ozeti</Text>
+          <Text style={styles.summaryTitle}>Katılımcı Özeti</Text>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Kullanici</Text>
+            <Text style={styles.summaryLabel}>Kullanıcı</Text>
             <Text style={styles.summaryValue}>{me?.username || "-"}</Text>
           </View>
           <View style={styles.summaryRow}>
@@ -382,13 +382,13 @@ function HomeView({ me, onLogout }) {
             <Text style={styles.summaryValue}>{me?.active_project_code || "-"}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Tema Onceligi</Text>
-            <Text style={styles.summaryValue}>Acenta, varsa Proje</Text>
+            <Text style={styles.summaryLabel}>Tema Önceliği</Text>
+            <Text style={styles.summaryValue}>Acente, varsa Proje</Text>
           </View>
         </View>
 
         <Pressable style={styles.secondaryBtn} onPress={onLogout}>
-          <Text style={styles.secondaryBtnText}>Cikis Yap</Text>
+          <Text style={styles.secondaryBtnText}>Çıkış Yap</Text>
         </Pressable>
       </ScrollView>
     </ScreenShell>
@@ -429,7 +429,7 @@ export default function App() {
 
   const handleLogin = async (username, password) => {
     if (!username || !password) {
-      Alert.alert("Eksik Bilgi", "Kullanici adi ve sifre gerekli.");
+      Alert.alert("Eksik Bilgi", "Kullanıcı adı ve şifre gerekli.");
       return;
     }
     setAuthBusy(true);
@@ -440,7 +440,7 @@ export default function App() {
       setToken(accessToken);
       setMe(out.user || null);
     } catch (err) {
-      Alert.alert("Giris Hatasi", err.message);
+      Alert.alert("Giriş Hatası", err.message);
     } finally {
       setAuthBusy(false);
     }
@@ -451,7 +451,7 @@ export default function App() {
       await api.setActiveProject(token, projectId);
       await loadMe(token);
     } catch (err) {
-      Alert.alert("Proje Hatasi", err.message);
+      Alert.alert("Proje Hatası", err.message);
     }
   };
 
@@ -468,7 +468,7 @@ export default function App() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.loaderScreen}>
           <ActivityIndicator size="large" color="#FFFFFF" />
-          <Text style={styles.loaderText}>Yukleniyor</Text>
+          <Text style={styles.loaderText}>Yükleniyor</Text>
         </View>
       </SafeAreaView>
     );

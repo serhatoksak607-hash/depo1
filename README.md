@@ -33,29 +33,29 @@ Dogru kullanim:
 
 ## Participant Uygulamasi
 
-Repo icinde Expo tabanli bir participant istemcisi de bulunur:
+Repo içinde Expo tabanlı bir participant istemcisi de bulunur:
 - klasor: `participant.app`
 - urun adi: `Creatro Participant`
-- kullanim: katilimci odakli login, proje secimi ve toplanti/rezervasyon/duyuru akisleri
+- kullanım: katılımcı odaklı login, proje seçimi ve toplantı/rezervasyon/duyuru akışları
 
-Participant is kurallari:
-- login ve header tarafinda varsayilan gorsel acenta logosudur
-- alt proje gorseli tanimliysa acenta logosunun yerine proje gorseli gelir
-- tema onceligi acenta renkleridir; proje tema renkleri varsa onlar override eder
-- participant ana sponsor logosu plaka alaninin yerini alir
-- hero kartta `Toplanti Modulu` yer alir
-- alt kartlar: `Program Akisi`, `Bildiriler`, `Sertifikalar`, `Kurslar`
-- `Masraflarim` yerine `Duyurular`
-- `Gorevlerim` yerine `Rezervasyonlarim`
-- `Rezervasyonlarim` icinde transfer ve konaklama detaylari gorunur
-- participant QR okutuldugunda:
-  - transfer akisi icin transfer sponsoru tesekkur gorseli
-  - kayit veya konaklama akisi icin kayit-konaklama sponsoru tesekkur gorseli
+Participant iş kuralları:
+- login ve header tarafında varsayılan görsel acente logosudur
+- alt proje görseli tanımlıysa acente logosunun yerine proje görseli gelir
+- tema önceliği acente renkleridir; proje tema renkleri varsa onlar override eder
+- participant ana sponsor logosu plaka alanının yerini alır
+- hero kartta `Toplantı Modülü` yer alır
+- alt kartlar: `Program Akışı`, `Bildiriler`, `Sertifikalar`, `Kurslar`
+- `Masraflarım` yerine `Duyurular`
+- `Görevlerim` yerine `Rezervasyonlarım`
+- `Rezervasyonlarım` içinde transfer ve konaklama detayları görünür
+- participant QR okutulduğunda:
+  - transfer akışı için transfer sponsoru teşekkür görseli
+  - kayıt veya konaklama akışı için kayıt-konaklama sponsoru teşekkür görseli
 
-Gelecek notlari:
-- `modules-ui` tarafindaki destek butonu ileride SaaS yonetim paneline baglanacak
-- SaaS ekibi icin SMS ve WhatsApp baglantilari acilacak
-- gelen destek mesajlari icin bildirim akisi eklenecek
+Gelecek notları:
+- `modules-ui` tarafındaki destek butonu ileride SaaS yönetim paneline bağlanacak
+- SaaS ekibi için SMS ve WhatsApp bağlantıları açılacak
+- gelen destek mesajları için bildirim akışı eklenecek
 
 ## Quick Start
 
@@ -91,7 +91,7 @@ Container ici portlar `8000/8001/8002/8003`, host tarafinda acilan portlar `3000
 
 GitHub'a cikmadan once:
 1. `.env` dosyasini commit etme.
-2. Gercek sifreleri sadece sunucudaki `.env` icinde tut.
+2. Gerçek şifreleri sadece sunucudaki `.env` içinde tut.
 3. `APP_ADMIN_PASS` degerini degistir.
 4. `PUBLIC_BASE_URL`, `CORS_ORIGINS` ve `TRUSTED_HOSTS` degerlerini ortama gore ayarla.
 

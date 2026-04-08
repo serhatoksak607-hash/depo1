@@ -23,7 +23,7 @@ export const PARTICIPANT_DEFAULTS = {
   appName: "Creatro Participant",
   loginHeroCode: "PARTICIPANT",
   fallbackAgencyName: "Acente",
-  fallbackProjectName: "Katilimci Projesi",
+  fallbackProjectName: "Katılımcı Projesi",
   fallbackSponsorName: "Ana Sponsor",
   agencyPrimary: "#113876",
   agencySecondary: "#8CD3FF",
@@ -34,13 +34,13 @@ export const PARTICIPANT_DEFAULTS = {
 
 export const MODULE_LABELS = {
   transfer: "Transferlerim",
-  kayit: "Kayit Bilgilerim",
+  kayit: "Kayıt Bilgilerim",
   konaklama: "Konaklama Bilgilerim",
-  toplanti: "Toplanti Modulu",
-  tercuman: "Tercuman Destegi",
+  toplanti: "Toplantı Modülü",
+  tercuman: "Tercüman Desteği",
   muhasebe_finans: "Muhasebe - Finans",
   duyurular: "Duyurular",
-  yonetim: "Yonetim",
+  yonetim: "Yönetim",
 };
 
 export const MODULE_ORDER = [
@@ -56,11 +56,11 @@ export const MODULE_ORDER = [
 
 export const PARTICIPANT_CARD_COPY = {
   oturumlar: "Oturumlar",
-  program: "Program Akisi",
+  program: "Program Akışı",
   bildiriler: "Bildiriler",
   sertifikalar: "Sertifikalar",
   kurslar: "Kurslar",
-  rezervasyonlarim: "Rezervasyonlarim",
+  rezervasyonlarim: "Rezervasyonlarım",
   duyurular: "Duyurular",
-  qr: "Katilimci QR",
+  qr: "Katılımcı QR",
 };
