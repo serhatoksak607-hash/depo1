@@ -239,3 +239,13 @@ Uretilen dosyalar:
 - `exports/ticket_scan_thy_only.csv` (yalniz THY/TK adaylari)
 - `exports/ticket_scan_thy_missing_summary.csv` (THY icin eksik alan sayilari)
 - `exports/ticket_scan_summary.json` (ozet)
+
+## Participant Tema Notlari
+
+- Participant uygulamasinda proje tema ana rengi `turuncu`, ikinci renk `lacivert` kabul edilir.
+- Solid lacivert yuzeyler tek renk blok yerine `lacivert -> yesil` gecisli degrade olarak uygulanir.
+- Header, loading, welcome ve footer yuzeyleri ayni tema ailesini izler.
+- Logo alaninda acente logosu veya proje gorseli kullanilir.
+- `formice.png` asset olcusu `1080x1080` olarak not edildi.
+- `urojinekoloji.jpg` asset olcusu `1920x774` olarak not edildi.
+- Hero gorselinde organizasyon banneri korunur; gerekiyorsa hero yuksekligi buyutulur, logo alaninda ise goruntu kirpilmaz.

@@ -1,5 +1,5 @@
 import React from "react";
-import { Bell, FolderOpen, Navigation, QrCode, Receipt } from "lucide-react";
+import { Bell, ChevronDown, ExternalLink, FolderOpen, Navigation, QrCode, Receipt } from "lucide-react";
 import type { AppConfig, ProjectSummary, Role, TabKey } from "@/data/types";
 import { formatPersonName } from "@/lib/utils";
 import { getShellProfile } from "@/services/core";
@@ -29,8 +29,8 @@ export function HomeScreen({
   const profile = getShellProfile(role);
   const hasAlerts = unreadAlerts > 0;
   const heroImage = appConfig.branding.hero_image_url || "";
-  const brandPrimary = appConfig.branding.primary_color || "#58C7F2";
-  const brandBase = appConfig.branding.base_color || "#091028";
+  const brandPrimary = appConfig.branding.primary_color || "#F28C28";
+  const brandBase = appConfig.branding.base_color || "#102B64";
   const modules = appConfig.modules;
   const isModuleVisible = (moduleKey: string) =>
     modules.project_modules[moduleKey]?.visible ??
@@ -58,21 +58,33 @@ export function HomeScreen({
           </p>
           <p className="truncate text-sm font-bold text-foreground">{userName}</p>
         </div>
-        <button
-          type="button"
-          onClick={onOpenProjectPicker}
-          className="flex min-w-[170px] flex-col items-end text-right transition-opacity hover:opacity-80"
-        >
-          <p className="max-w-full truncate text-[11px] font-semibold text-foreground">
-            {selectedProject.name}
-          </p>
-          <p className="mt-0.5 max-w-full truncate text-[10px] font-medium text-muted-foreground">
-            {selectedProject.dateRange}
-          </p>
-          <p className="mt-0.5 max-w-full truncate text-[10px] font-medium text-muted-foreground">
-            {selectedProject.location}
-          </p>
-        </button>
+        <div className="flex min-w-[170px] flex-col items-end text-right">
+          <button
+            type="button"
+            onClick={onOpenProjectPicker}
+            className="inline-flex max-w-full items-center gap-1 truncate text-[11px] font-semibold text-foreground transition-opacity hover:opacity-80"
+          >
+            <span className="truncate">{selectedProject.name}</span>
+            <ChevronDown className="h-3 w-3 flex-shrink-0 text-muted-foreground/70" />
+          </button>
+          <button
+            type="button"
+            onClick={onOpenProjectPicker}
+            className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate text-[10px] font-medium text-muted-foreground transition-opacity hover:opacity-80"
+          >
+            <span className="truncate">{selectedProject.dateRange}</span>
+            <ChevronDown className="h-3 w-3 flex-shrink-0 text-muted-foreground/60" />
+          </button>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedProject.location)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate text-[10px] font-medium text-azure-500/90 underline-offset-2 hover:underline"
+          >
+            <span className="truncate">{selectedProject.location}</span>
+            <ExternalLink className="h-3 w-3 flex-shrink-0 text-azure-500/70" />
+          </a>
+        </div>
       </div>
 
       <button
@@ -156,15 +168,15 @@ export function HomeScreen({
           className="w-full overflow-hidden rounded-2xl border text-left transition-colors"
           style={{
             borderColor: `${brandPrimary}4D`,
-            backgroundColor: brandBase,
+            background: `linear-gradient(140deg, ${brandBase} 0%, #183B7E 54%, #19564D 100%)`,
             boxShadow: `0 8px 18px ${brandPrimary}2E`,
           }}
         >
-          <div className="relative h-36 w-full">
+          <div className="relative h-40 w-full">
             <img
               src={heroImage}
               alt="Hero görseli"
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover object-top"
               loading="eager"
               fetchPriority="high"
               decoding="async"
@@ -173,7 +185,7 @@ export function HomeScreen({
             />
             <div
               className="absolute inset-0"
-              style={{ background: `linear-gradient(to top, ${brandBase} 0%, ${brandBase}99 55%, transparent 100%)` }}
+              style={{ background: "linear-gradient(to top, rgba(16, 43, 100, 0.92) 0%, rgba(24, 59, 126, 0.56) 20%, rgba(25, 86, 77, 0.16) 38%, rgba(25, 86, 77, 0.00) 60%)" }}
             />
           </div>
           <div className="relative -mt-10 px-6 pb-5">
@@ -185,7 +197,7 @@ export function HomeScreen({
                 <Navigation className="h-6 w-6" style={{ color: brandPrimary }} />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-primary-foreground">Operasyon</h2>
+                <h2 className="text-xl font-bold text-primary-foreground">Toplantı</h2>
                 <p className="text-xs" style={{ color: `${brandPrimary}` }}>Aktif işleri aç</p>
               </div>
             </div>

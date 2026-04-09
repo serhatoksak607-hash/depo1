@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLoadingScreen } from "@/components/AppLoadingScreen";
-import creatroLogo from "@/assets/brand/Ontur.png";
+import creatroLogo from "@/assets/brand/formice.png";
 import type { Role } from "@/data/types";
 import { formatPersonName } from "@/lib/utils";
 import {
@@ -56,9 +56,9 @@ async function preloadCoreData(role: Role) {
 function getWelcomeMessage(date: Date) {
   const hour = date.getHours();
 
-  if (hour < 12) return "Operasyon verileri hazırlanıyor.";
-  if (hour < 18) return "Operasyon verileri hazırlanıyor.";
-  return "Operasyon verileri hazırlanıyor.";
+  if (hour < 12) return "Katılımcı paneli hazırlanıyor.";
+  if (hour < 18) return "Katılımcı paneli hazırlanıyor.";
+  return "Katılımcı paneli hazırlanıyor.";
 }
 
 function mixHexWithWhite(hex: string, whiteRatio: number) {
@@ -98,14 +98,14 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#091028]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(88,199,242,0.22),_transparent_44%),linear-gradient(180deg,_#0B1430_0%,_#08101F_100%)]" />
+    <div className="relative min-h-screen overflow-hidden bg-[#102B64]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(242,140,40,0.22),_transparent_42%),linear-gradient(140deg,_#102B64_0%,_#183B7E_52%,_#19564D_100%)]" />
       <div className="relative z-10 flex min-h-screen items-center justify-center px-5 py-10">
         <div className="w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-white shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
-          <div className="bg-[#091028] px-8 py-8 text-center">
-            <img src={creatroLogo} alt="" className="mx-auto h-16 w-auto object-contain" />
-            <p className="mt-5 text-xs font-bold uppercase tracking-[0.3em] text-[#D4AF37]">Participant Login</p>
-            <h1 className="mt-3 text-2xl font-semibold text-white">Hoş Geldin</h1>
+          <div className="bg-white px-8 py-8 text-center">
+            <img src={creatroLogo} alt="" className="mx-auto h-20 w-auto object-contain" />
+            <p className="mt-5 text-xs font-bold uppercase tracking-[0.3em] text-[#F28C28]">Participant Login</p>
+            <h1 className="mt-3 text-2xl font-semibold text-[#102B64]">Hoş Geldin</h1>
             <p className="mt-2 text-sm text-slate-300">Katılımcı uygulamasına giriş yaparak devam edin.</p>
           </div>
           <div className="space-y-4 px-8 py-8">
@@ -116,7 +116,7 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">Kullanıcı Adı</label>
               <input
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#D4AF37]"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#F28C28]"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 onKeyDown={(event) => {
@@ -129,7 +129,7 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
               <label className="text-sm font-medium text-slate-700">Şifre</label>
               <input
                 type="password"
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#D4AF37]"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#F28C28]"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 onKeyDown={(event) => {
@@ -142,7 +142,7 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
             <button
               type="button"
               onClick={handleSubmit}
-              className="w-full rounded-2xl bg-[#091028] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#10203F]"
+              className="w-full rounded-2xl bg-[#F28C28] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#DF7B1D]"
             >
               Giriş Yap
             </button>
@@ -162,9 +162,9 @@ function WelcomeOverlay({ role }: WelcomeOverlayProps) {
   const appConfig = getAppConfig(role);
   const shellProfile = getShellProfile(role);
   const logoUrl = appConfig.branding.loading_logo_url || appConfig.branding.logo_url || creatroLogo;
-  const primaryColor = appConfig.branding.loading_primary_color || appConfig.branding.primary_color || "#58C7F2";
+  const primaryColor = appConfig.branding.loading_primary_color || appConfig.branding.primary_color || "#F28C28";
   const secondaryColor = mixHexWithWhite(
-    appConfig.branding.loading_base_color || appConfig.branding.base_color || "#091028",
+    appConfig.branding.loading_base_color || appConfig.branding.base_color || "#102B64",
     0.82,
   );
   const welcomeName = formatPersonName(shellProfile.full_name);
@@ -199,8 +199,8 @@ function WelcomeOverlay({ role }: WelcomeOverlayProps) {
   }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#091028]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(88,199,242,0.22),_transparent_44%),linear-gradient(180deg,_#0B1430_0%,_#08101F_100%)]" />
+    <div className="relative min-h-screen overflow-hidden bg-[#102B64]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(242,140,40,0.22),_transparent_42%),linear-gradient(140deg,_#102B64_0%,_#183B7E_52%,_#19564D_100%)]" />
       <div className="absolute inset-0 flex items-center justify-center">
         <div
           className={`flex w-full max-w-[320px] flex-col items-center gap-4 px-6 text-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-sm sm:gap-5 ${
@@ -317,3 +317,4 @@ const App = () => {
 };
 
 export default App;
+

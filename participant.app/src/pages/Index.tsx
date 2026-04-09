@@ -15,8 +15,8 @@ import type { ProjectSummary, Role, TabKey } from "@/data/types";
 import { HomeScreen } from "@/components/screens/HomeScreen";
 import { OperationsScreen } from "@/components/screens/OperationsScreen";
 import { JobsScreen } from "@/components/screens/JobsScreen";
-import brandFallbackLogo from "@/assets/brand/Ontur.png";
-import creatroLogo from "@/assets/brand/kontrast_logo.png";
+import brandFallbackLogo from "@/assets/brand/formice.png";
+import footerBanner from "@/assets/brand/footer2.png";
 import { toast } from "@/components/ui/sonner";
 import {
   Dialog,
@@ -101,10 +101,10 @@ function formatLastSyncText(syncedAt?: string) {
 
 function ScreenFallback({ role }: { role: Role }) {
   const appConfig = getAppConfig(role);
-  const loadingLogo = appConfig.branding.loading_logo_url || appConfig.branding.logo_url || creatroLogo;
-  const loadingPrimary = appConfig.branding.loading_primary_color || appConfig.branding.primary_color || "#58C7F2";
-  const loadingBase = appConfig.branding.loading_base_color || appConfig.branding.base_color || "#091028";
-  const gradientEnd = appConfig.branding.base_color || "#10203F";
+  const loadingLogo = appConfig.branding.loading_logo_url || appConfig.branding.logo_url || brandFallbackLogo;
+  const loadingPrimary = appConfig.branding.loading_primary_color || appConfig.branding.primary_color || "#F28C28";
+  const loadingBase = appConfig.branding.loading_base_color || appConfig.branding.base_color || "#102B64";
+  const gradientEnd = "#19564D";
 
   return (
     <div
@@ -190,7 +190,8 @@ const Index = () => {
   });
   const selectedProject =
     projectOptions.find((project) => project.id === selectedProjectId) || projectOptions[0];
-  const brandBg = appConfig.branding.base_color || "#091028";
+  const brandBg = appConfig.branding.base_color || "#102B64";
+  const brandPrimary = appConfig.branding.primary_color || "#F28C28";
   const headerLogo = appConfig.branding.logo_url || brandFallbackLogo;
   const lastSyncText = formatLastSyncText(bootstrap?.syncedAt);
   const unreadNotifications = notificationItems.filter(
@@ -258,7 +259,10 @@ const Index = () => {
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col overflow-hidden bg-background">
-      <header className="flex-shrink-0 border-b border-border" style={{ backgroundColor: brandBg }}>
+      <header
+        className="flex-shrink-0 border-b border-white/10"
+        style={{ background: `linear-gradient(140deg, ${brandBg} 0%, #183B7E 52%, #19564D 100%)` }}
+      >
         <div className="flex h-[84px] items-center justify-center px-4">
           <img
             src={headerLogo}
@@ -276,7 +280,8 @@ const Index = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setRole(role === "driver" ? "greeter" : "driver")}
-                className="rounded-lg bg-navy-600 px-3 py-1.5 text-[10px] font-bold text-azure-300"
+                className="rounded-lg px-3 py-1.5 text-[10px] font-bold text-white"
+                style={{ backgroundColor: brandPrimary }}
               >
                 {role === "driver" ? "Sürücü" : "Karşılamacı"}
               </button>
@@ -441,7 +446,7 @@ const Index = () => {
                     }}
                     className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition-colors ${
                       isSelected
-                        ? "border-azure-500/30 bg-azure-500/10"
+                        ? "border-gold-500/30 bg-gold-500/10"
                         : "border-border bg-card active:bg-secondary"
                     }`}
                   >
@@ -452,7 +457,7 @@ const Index = () => {
                     </div>
                     <div className="ml-3 flex h-9 w-9 items-center justify-center">
                       {isSelected ? (
-                        <Check className="h-5 w-5 text-azure-500" />
+                        <Check className="h-5 w-5 text-gold-500" />
                       ) : (
                         <ChevronRight className="h-5 w-5 text-muted-foreground" />
                       )}
@@ -465,8 +470,11 @@ const Index = () => {
         </DialogContent>
       </Dialog>
 
-      <nav className="flex-shrink-0 border-t border-border bg-card/95 px-2 pb-2 pt-2 backdrop-blur">
-        <div className="flex items-stretch gap-1">
+      <nav className="relative flex-shrink-0 overflow-hidden border-t border-[#d6deed] px-2 pb-2 pt-2 shadow-[0_-6px_18px_rgba(15,23,42,0.05)]">
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,_#fef4ea_0%,_#f6f2f7_28%,_#edf2fb_56%,_#f4faf7_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,_rgba(255,255,255,0.80)_0%,_rgba(255,255,255,0.35)_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,_rgba(242,140,40,0.12)_0%,_rgba(16,43,100,0.24)_50%,_rgba(25,86,77,0.14)_100%)]" />
+        <div className="relative flex items-stretch gap-1">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
             return (
@@ -475,8 +483,8 @@ const Index = () => {
                 onClick={() => handleTabChange(tab.key)}
                 className={`relative flex flex-1 flex-col items-center gap-1 rounded-2xl border px-1 py-2.5 transition-colors ${
                   isActive
-                    ? `border-current bg-current/10 ${tab.activeColor}`
-                    : "border-transparent text-muted-foreground"
+                    ? `border-current bg-current/10 shadow-[0_8px_18px_rgba(15,23,42,0.06)] ${tab.activeColor}`
+                    : "border-transparent text-slate-500"
                 }`}
               >
                 <div className="relative">
@@ -496,33 +504,15 @@ const Index = () => {
       </nav>
 
       <footer
-        className="flex h-[60px] flex-shrink-0 items-center justify-between px-4"
-        style={{ backgroundColor: brandBg }}
+        className="relative flex h-[68px] flex-shrink-0 items-center overflow-hidden border-t border-white/10"
+        style={{ background: `linear-gradient(140deg, ${brandBg} 0%, #183B7E 52%, #19564D 100%)` }}
       >
-        <a
-          href="https://www.creatro.com.tr"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center"
-        >
-          <img
-            src={creatroLogo}
-            alt="Creatro"
-            className="h-[50px] w-auto object-contain"
-            width={150}
-            height={50}
-          />
-        </a>
-        <div className="text-right">
-          <p
-            className={`text-[11px] font-bold tracking-[0.18em] ${
-              isOnline ? "text-azure-300" : "text-danger"
-            }`}
-          >
-            • {isOnline ? "Çevrim İçi" : "Çevrim Dışı"}
-          </p>
-          <p className="text-[11px] text-slate-200">{lastSyncText}</p>
-        </div>
+        <img
+          src={footerBanner}
+          alt="Footer banner"
+          className="absolute right-0 top-0 w-full max-w-none"
+          style={{ height: "calc(100% + 18px)" }}
+        />
       </footer>
     </div>
   );

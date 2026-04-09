@@ -1,5 +1,5 @@
-import coftTempLogo from "@/assets/brand/Ontur.png";
-import vehicleHero from "@/assets/brand/vehicle-hero.jpg";
+import coftTempLogo from "@/assets/brand/formice.png";
+import vehicleHero from "@/assets/brand/urojinekoloji.jpg";
 import type {
   AppConfig,
   CoreBootstrapPayload,
@@ -46,12 +46,12 @@ const appConfigsByRole: Record<Role, AppConfig> = {
       source: "vehicle_company",
       logo_url: coftTempLogo,
       hero_image_url: vehicleHero,
-      primary_color: "#D4AF37",
-      base_color: "#091028",
+      primary_color: "#F28C28",
+      base_color: "#102B64",
       logo_fit_mode: "contained",
       loading_logo_url: coftTempLogo,
-      loading_primary_color: "#D4AF37",
-      loading_base_color: "#091028",
+      loading_primary_color: "#F28C28",
+      loading_base_color: "#102B64",
     },
     navigation: {
       home_route: "home",
@@ -122,12 +122,12 @@ const appConfigsByRole: Record<Role, AppConfig> = {
       source: "vehicle_company",
       logo_url: coftTempLogo,
       hero_image_url: vehicleHero,
-      primary_color: "#D4AF37",
-      base_color: "#091028",
+      primary_color: "#F28C28",
+      base_color: "#102B64",
       logo_fit_mode: "contained",
       loading_logo_url: coftTempLogo,
-      loading_primary_color: "#D4AF37",
-      loading_base_color: "#091028",
+      loading_primary_color: "#F28C28",
+      loading_base_color: "#102B64",
     },
     navigation: {
       home_route: "home",
