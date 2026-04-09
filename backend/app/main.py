@@ -6493,6 +6493,27 @@ def _load_draw_font(font_family: str, pt: float, dpi: int):
     return ImageFont.load_default()
 
 
+def _load_layout_background_image(template_value, img_w: int, img_h: int) -> Image.Image | None:
+    raw = str(template_value or "").strip()
+    if not raw:
+        return None
+    try:
+        payload = raw
+        if raw.startswith("data:"):
+            _, _, encoded = raw.partition(",")
+            if not encoded:
+                return None
+            payload = encoded
+        blob = base64.b64decode(payload, validate=False)
+        with Image.open(io.BytesIO(blob)) as src:
+            bg = src.convert("RGB")
+            if bg.size != (img_w, img_h):
+                bg = bg.resize((img_w, img_h), Image.Resampling.LANCZOS)
+            return bg
+    except Exception:
+        return None
+
+
 def _render_layout_image(payload: dict, default_w_mm: float, default_h_mm: float) -> Image.Image:
     layout = payload.get("layout") if isinstance(payload, dict) else {}
     fields = payload.get("fields") if isinstance(payload, dict) else []
@@ -6511,7 +6532,9 @@ def _render_layout_image(payload: dict, default_w_mm: float, default_h_mm: float
 
     img_w = _mm_to_px(width_mm, dpi)
     img_h = _mm_to_px(height_mm, dpi)
-    image = Image.new("RGB", (img_w, img_h), (255, 255, 255))
+    image = _load_layout_background_image(layout.get("template_data_url"), img_w, img_h)
+    if image is None:
+        image = Image.new("RGB", (img_w, img_h), (255, 255, 255))
     draw = ImageDraw.Draw(image)
 
     content_x_mm = m_left
@@ -7885,7 +7908,18 @@ def modules_ui():
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Modüller</title>
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: linear-gradient(135deg, #e6eefc 0%, #dbe7fb 48%, #edf3ff 100%); background-attachment: fixed; color: #1c2635; overflow-x: hidden; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(159, 216, 255, 0.32) 0%, rgba(159, 216, 255, 0) 28%),
+        radial-gradient(circle at top right, rgba(10, 16, 36, 0.18) 0%, rgba(10, 16, 36, 0) 26%),
+        radial-gradient(circle at bottom center, rgba(96, 143, 214, 0.16) 0%, rgba(96, 143, 214, 0) 30%),
+        linear-gradient(145deg, #eef4ff 0%, #dde8fb 36%, #d4e2fa 62%, #eaf1ff 100%);
+      background-attachment: fixed;
+      color: #1c2635;
+      overflow-x: hidden;
+    }
     .wrap { width: 100%; margin: 0; padding: 16px; box-sizing: border-box; position: relative; isolation: isolate; }
     .head, .grid, .reports-band-section, .reports-band, .reports-band-detail-grid { position: relative; z-index: 1; }
     .head {
@@ -7983,13 +8017,59 @@ def modules_ui():
     }
     .grid::before { left: 0; }
     .grid::after { right: 0; }
+    .quickdesk-floating {
+      position:absolute;
+      right:100%;
+      top:0;
+      bottom:0;
+      width:240px;
+      margin-right:16px;
+      background:linear-gradient(180deg, #fffdfa 0%, #fff6dd 100%);
+      border:1px solid #d9b24c;
+      border-radius:14px;
+      padding:14px 14px 12px;
+      box-sizing:border-box;
+      box-shadow:0 10px 24px rgba(217, 178, 76, 0.18);
+      z-index:2;
+      display:flex;
+      flex-direction:column;
+    }
+    .quickdesk-floating::before {
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      bottom:0;
+      width:3px;
+      border-radius:14px 0 0 14px;
+      background:#d4af37;
+    }
+    .quickdesk-floating-title {
+      margin:0 0 10px 0;
+      font-size:17px;
+      font-weight:800;
+      color:#7b5a00;
+      position:relative;
+      padding-bottom:8px;
+    }
+    .quickdesk-floating-title::after {
+      content:"";
+      position:absolute;
+      left:0;
+      bottom:0;
+      width:72%;
+      height:4px;
+      border-radius:999px;
+      background:linear-gradient(90deg, #d4af37 0%, rgba(212, 175, 55, 0.16) 100%);
+    }
     .reports-band {
-      max-width: 1100px; margin: 10px auto 0 auto;
+      width:100%;
+      margin:-18px 0 0 0;
       display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;
     }
     .reports-band-section {
-      max-width: 1100px;
-      margin: 16px auto 0 auto;
+      width:100%;
+      margin:-12px 0 0 0;
       display: flex;
       align-items: center;
       gap: 0;
@@ -8373,15 +8453,34 @@ def modules_ui():
       color: #3b6fd8;
     }
     @media (max-width: 980px) {
-      .reports-band-section { margin-top: 14px; }
+      .reports-band-section { margin-top: -14px; }
       .reports-band { grid-template-columns: 1fr; }
       .reports-band-detail-grid { grid-template-columns: 1fr; }
       .reports-band-row-meta { white-space: normal; }
+      .quickdesk-floating {
+        position:static;
+        width:auto;
+        margin:0 auto 14px auto;
+        max-width:1100px;
+        min-height:0;
+      }
+      .desk-floating-bottom {
+        position:static;
+        width:auto;
+        margin:0 auto 14px auto;
+        max-width:none;
+      }
+      .reports-dock {
+        max-width:none;
+        margin-top:14px;
+        padding:0;
+      }
     }
     .card {
-      background:#fff; border:1px solid #dde4ef; border-radius:12px; padding:14px;
+      background:linear-gradient(180deg, #ffffff 0%, #feffff 54%, #fcfdff 100%); border:1px solid #dde4ef; border-radius:12px; padding:14px;
       display:flex; flex-direction:column; gap:8px; align-items:center; position:relative; overflow:hidden;
       transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+      box-shadow:0 10px 24px rgba(120,142,176,0.08);
     }
     .card-icon {
       width:54px; height:54px; border-radius:14px; display:flex; align-items:center; justify-content:center;
@@ -8398,6 +8497,7 @@ def modules_ui():
     .card-hotel { --accent:#2a9d8f; }
     .card-meeting { --accent:#e67e22; }
     .card-interpreter { --accent:#8e44ad; }
+    .card-desk { --accent:#c89e34; }
     .card-transport { --accent:#1f78ff; }
     .card-finance { --accent:#16a34a; }
     .card-announcement { --accent:#f59e0b; }
@@ -8406,14 +8506,59 @@ def modules_ui():
     .card-hotel .card-icon { background:#e8faf7; border-color:#b8ece4; color:#2a9d8f; }
     .card-meeting .card-icon { background:#fff2e6; border-color:#ffd8b6; color:#e67e22; }
     .card-interpreter .card-icon { background:#f6ecfb; border-color:#ddc5ef; color:#8e44ad; }
+    .card-desk .card-icon { background:#fff8e7; border-color:#ead08c; color:#b88718; }
     .card-transport .card-icon { background:#e9f2ff; border-color:#bfd7ff; color:#1f78ff; }
     .card-finance .card-icon { background:#eaf9ef; border-color:#bde8cb; color:#16a34a; }
     .card-announcement .card-icon { background:#fff8e9; border-color:#ffe1a6; color:#f59e0b; }
     .card-admin .card-icon { background:#ffecec; border-color:#ffc8c8; color:#ef4444; }
+    .quickdesk-panel { width:100%; display:flex; flex-direction:column; gap:8px; z-index:1; flex:1 1 auto; min-height:0; }
+    .quickdesk-search {
+      width:100%; box-sizing:border-box; border:1px solid #cfd9e8; border-radius:10px; padding:10px 12px;
+      font-size:13px; font-weight:700; color:#0a214a; background:#fff;
+    }
+    .quickdesk-search:focus { outline:none; border-color:#1b9cf6; box-shadow:0 0 0 4px rgba(27,156,246,0.12); }
+    .quickdesk-list {
+      border:1px solid #d7c27a; border-radius:14px; background:linear-gradient(180deg, #fffdfa 0%, #fff8ea 100%); min-height:168px; overflow:auto; flex:1 1 auto; padding:4px 0;
+    }
+    .quickdesk-item {
+      width:100%; border:0; border-bottom:1px solid #eedfb0; background:transparent; text-align:left; padding:9px 12px; cursor:pointer;
+      display:flex; align-items:center; justify-content:space-between; gap:10px; color:#16325c; border-radius:0;
+      box-shadow:none; appearance:none;
+      transition:background-color .14s ease, color .14s ease;
+    }
+    .quickdesk-item:last-child { border-bottom:0; }
+    .quickdesk-item:hover {
+      transform:none;
+      border-color:transparent;
+      box-shadow:none;
+      background:rgba(216,177,77,0.10);
+    }
+    .quickdesk-item.active {
+      background:rgba(216,177,77,0.18);
+      border-color:transparent;
+      box-shadow:none;
+    }
+    .quickdesk-item-main { min-width:0; display:flex; flex-direction:column; gap:4px; }
+    .quickdesk-item-name { font-size:13px; font-weight:800; color:#5a3d00; }
+    .quickdesk-item-meta { font-size:11px; color:#7b6a42; font-weight:700; }
+    .quickdesk-item-state {
+      flex:0 0 auto; align-self:center; border-radius:999px; padding:3px 8px; font-size:10px; font-weight:800;
+      letter-spacing:.2px; border:1px solid #dec98b; background:#fff7dd; color:#8a6b1a;
+    }
+    .quickdesk-item-state.pending { background:#eef6ff; border-color:#b7d3ff; color:#1d4f91; }
+    .quickdesk-item-state.delivered { background:#ecfdf3; border-color:#b7e2c6; color:#146c43; }
+    .quickdesk-actions { display:flex; gap:8px; align-items:center; justify-content:space-between; }
+    .quickdesk-btn {
+      width:100%; background:linear-gradient(180deg, #d8b14d 0%, #b88718 100%); color:#fffdf6; text-decoration:none; border-radius:10px; padding:10px 12px; border:1px solid #9f7416;
+      cursor:pointer; font-weight:800; box-shadow:0 10px 20px rgba(159,116,22,0.16);
+    }
+    .quickdesk-btn:disabled { opacity:0.55; cursor:not-allowed; }
+    .quickdesk-status { min-height:32px; color:#5c6b82; font-size:12px; text-align:left; }
     .card-register .card-shape,
     .card-hotel .card-shape,
     .card-meeting .card-shape,
     .card-interpreter .card-shape,
+    .card-desk .card-shape,
     .card-transport .card-shape,
     .card-finance .card-shape,
     .card-announcement .card-shape,
@@ -8426,6 +8571,44 @@ def modules_ui():
       width: fit-content; background:#2b7fff; color:#fff; text-decoration:none;
       border-radius:8px; padding:8px 12px; border:1px solid #2b7fff;
       transition: background-color .18s ease, color .18s ease, border-color .18s ease;
+    }
+    .reports-dock {
+      position:relative;
+      max-width:1100px;
+      margin:14px auto 0 auto;
+      margin-top:14px;
+      padding:0 18px;
+      box-sizing:border-box;
+    }
+    .desk-floating-bottom {
+      position:absolute;
+      right:100%;
+      top:0;
+      bottom:0;
+      width:240px;
+      margin-right:16px;
+      z-index:2;
+      padding:0;
+      box-sizing:border-box;
+      display:flex;
+    }
+    .desk-floating-bottom .card {
+      min-height:100%;
+      height:100%;
+      justify-content:center;
+      width:100%;
+      border-radius:14px;
+      border-color:#d9b24c;
+      box-shadow:0 10px 24px rgba(217, 178, 76, 0.12);
+      background:linear-gradient(180deg, rgba(255,254,248,0.96) 0%, rgba(255,252,243,0.94) 100%);
+      padding:14px 14px 12px;
+    }
+    #reportsDockMain {
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      justify-content:stretch;
+      width:100%;
     }
     .card:has(a:hover),
     .card:has(a:focus-visible) {
@@ -8537,6 +8720,18 @@ def modules_ui():
       </select>
     </div>
     <div class="grid">
+      <div class="quickdesk-floating">
+        <h3 class="quickdesk-floating-title">Hızlı Desk</h3>
+        <div class="quickdesk-panel">
+          <div class="quickdesk-status" id="quickDeskInfo">Katılımcı ara, ok tuşlarıyla seç ve Enter ile yaka kartı bas.</div>
+          <div class="quickdesk-status" id="quickDeskDebug" style="margin-top:4px; color:#a16207;">Hazırlanıyor...</div>
+          <input id="quickDeskSearch" class="quickdesk-search" type="text" placeholder="Ad Soyad / Kimlik / Telefon" autocomplete="off" />
+          <div id="quickDeskList" class="quickdesk-list"></div>
+          <div class="quickdesk-actions">
+            <button id="quickDeskPrint" class="quickdesk-btn" type="button" disabled>Yaka Kartı Bas</button>
+          </div>
+        </div>
+      </div>
       <div class="card card-register">
         <span class="card-shape"></span>
         <div class="card-icon" aria-hidden="true">
@@ -8586,7 +8781,7 @@ def modules_ui():
         </div>
         <h3 id="cardTransferTitle">Ulaşım Modülü</h3>
         <div id="cardTransferDesc" class="muted">Upload/Download, İçeri Aktar/Dışarı Aktar, Uçak Takip ve Araç Takip.</div>
-        <a id="cardTransferBtn" href="/transfer-list-ui">Aç</a>
+        <a id="cardTransferBtn" href="/transfer-ui">Aç</a>
       </div>
       <div class="card card-announcement">
         <span class="card-shape"></span>
@@ -8616,13 +8811,32 @@ def modules_ui():
         <a id="cardAdminBtn" href="/yonetici-ui">Aç</a>
       </div>
     </div>
+    <div class="reports-dock">
+      <div class="desk-floating-bottom">
+        <div class="card card-desk">
+          <span class="card-shape"></span>
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="12" rx="2"></rect><path d="M8 9h8M8 13h5"></path><path d="M9 19h6"></path></svg>
+          </div>
+          <h3 id="cardDeskTitle">DESK</h3>
+          <div id="cardDeskDesc" class="muted">Katılımcı arama, yaka kartı basım ve teslim işlemleri.</div>
+          <a id="cardDeskBtn" href="/desk-ui">Aç</a>
+        </div>
+      </div>
+      <div id="reportsDockMain"></div>
+    </div>
   </div>
   <button id="logoutFab" class="logout-fab" type="button">&rarr; Çıkış</button><script>
-    const token = localStorage.getItem('access_token') || '';
+    const token = localStorage.getItem('access_token')
+      || sessionStorage.getItem('access_token')
+      || localStorage.getItem('token')
+      || sessionStorage.getItem('token')
+      || '';
     (() => {
       const wrap = document.querySelector('.wrap');
       const grid = document.querySelector('.wrap > .grid');
-      if (!wrap || !grid || document.getElementById('reportsBandTitle')) return;
+      const reportsHost = document.getElementById('reportsDockMain');
+      if (!wrap || !grid || !reportsHost || document.getElementById('reportsBandTitle')) return;
       const section = document.createElement('div');
       section.className = 'reports-band-section';
       section.innerHTML = '<div class="reports-band-divider"></div>';
@@ -8656,10 +8870,35 @@ def modules_ui():
         +   '</table>'
         +   '<div class="reports-band-footer"><span class="reports-band-footer-side"><span class="reports-band-arrow" aria-hidden="true">&#8592;</span><span>Önceki</span></span><span class="reports-band-footer-center">Tüm Bildirimler</span><span class="reports-band-footer-side"><span>Sonraki</span><span class="reports-band-arrow" aria-hidden="true">&#8594;</span></span></div>'
         + '</div>';
-      grid.insertAdjacentElement('afterend', section);
-      section.insertAdjacentElement('afterend', band);
+      reportsHost.appendChild(section);
+      reportsHost.appendChild(band);
     })();
     const projectBadge = document.getElementById('activeProjectBadge');
+    const quickDeskSearch = document.getElementById('quickDeskSearch');
+    const quickDeskList = document.getElementById('quickDeskList');
+    const quickDeskInfo = document.getElementById('quickDeskInfo');
+    const quickDeskDebug = document.getElementById('quickDeskDebug');
+    const quickDeskPrint = document.getElementById('quickDeskPrint');
+    let quickDeskProjectId = null;
+    let quickDeskAllRows = [];
+    let quickDeskItems = [];
+    let quickDeskSelectedIdx = -1;
+    let quickDeskBadgeLayout = {
+      width_mm: 90,
+      height_mm: 55,
+      margin_top_mm: 4,
+      margin_left_mm: 4,
+      margin_right_mm: 4,
+      margin_bottom_mm: 4,
+      fields: [
+        { source: "ad_soyad", font_family: "Arial", font_size_pt: 18, font_weight: "800", font_bold: true, font_italic: false, font_underline: false, font_color: "#0a214a", text_align: "center", fit: true },
+        { source: "kurum", font_family: "Arial", font_size_pt: 14, font_weight: "700", font_bold: true, font_italic: false, font_underline: false, font_color: "#0a214a", text_align: "center", fit: true },
+        { source: "unvan", font_family: "Arial", font_size_pt: 12, font_weight: "700", font_bold: true, font_italic: false, font_underline: false, font_color: "#0a214a", text_align: "center", fit: true },
+        { source: "gorev", font_family: "Arial", font_size_pt: 12, font_weight: "700", font_bold: true, font_italic: false, font_underline: false, font_color: "#0a214a", text_align: "center", fit: true }
+      ]
+    };
+    let quickDeskBadgeTemplates = [];
+    let quickDeskActiveBadgeTemplateId = "";
     const moduleDomMap = {
       transfer: { navId: 'navTransfer', cardBtnId: 'cardTransferBtn' },
       kayit: { navId: 'navRegister', cardBtnId: 'cardRegisterBtn' },
@@ -8705,21 +8944,24 @@ def modules_ui():
       adminLinks.forEach((el) => { el.style.display = allowSet.has('yonetim') ? '' : 'none'; });
     };
     const ensureActiveProject = async () => {
-      if (!token) { window.location.href = '/'; return; }
+      if (!token) { window.location.href = '/'; return false; }
       try {
         const res = await fetch('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
         const me = await res.json();
-        if (!res.ok) { const uiLang = localStorage.getItem('ui_lang') || ''; localStorage.clear(); sessionStorage.clear(); if (uiLang) localStorage.setItem('ui_lang', uiLang); window.location.href = '/'; return; }
+        if (!res.ok) { const uiLang = localStorage.getItem('ui_lang') || ''; localStorage.clear(); sessionStorage.clear(); if (uiLang) localStorage.setItem('ui_lang', uiLang); window.location.href = '/'; return false; }
         const role = String(me.role || '').trim().toLowerCase();
         applyVisibleModules(me.visible_modules, role);
-        if (!me.active_project_id && role !== 'superadmin') { window.location.href = '/project-select-ui'; return; }
+        if (!me.active_project_id && role !== 'superadmin') { window.location.href = '/project-select-ui'; return false; }
+        quickDeskProjectId = me.active_project_id || null;
         if (projectBadge) {
           const pName = me.active_project_name || (role === 'superadmin' ? 'Yönetim Modu' : '-');
           const pCode = me.active_project_code || (role === 'superadmin' ? 'PROJESIZ' : '-');
           projectBadge.textContent = `AKTİF PROJE: ${pName} (${pCode})`;
         }
+        return true;
       } catch (_) {
         window.location.href = '/';
+        return false;
       }
     };
     ensureActiveProject();
@@ -8751,6 +8993,9 @@ def modules_ui():
         cardInterpreterTitle: "Tercüman Modülü",
         cardInterpreterDesc: "Çeviri oturumları ve canlı online tercüme yönetimi.",
         cardInterpreterBtn: "Aç",
+        cardDeskTitle: "DESK",
+        cardDeskDesc: "Katılımcı arama, yaka kartı basım ve teslim işlemleri.",
+        cardDeskBtn: "Aç",
         cardFinanceTitle: "Muhasebe - Finans Modülü",
         cardFinanceDesc: "Bütçe, tahsilat ve finansal operasyonların yönetimi.",
         cardFinanceBtn: "Aç",
@@ -8788,6 +9033,9 @@ def modules_ui():
         cardInterpreterTitle: "Interpreter Module",
         cardInterpreterDesc: "Translation sessions and live online interpretation management.",
         cardInterpreterBtn: "Open",
+        cardDeskTitle: "DESK",
+        cardDeskDesc: "Participant search, badge printing and delivery operations.",
+        cardDeskBtn: "Open",
         cardFinanceTitle: "Accounting - Finance Module",
         cardFinanceDesc: "Management of budget, collection and financial operations.",
         cardFinanceBtn: "Open",
@@ -8821,6 +9069,9 @@ def modules_ui():
         cardMeetingTitle: "Módulo de Reunión",
         cardMeetingDesc: "Módulo principal para operaciones de reunión.",
         cardMeetingBtn: "Abrir",
+        cardDeskTitle: "DESK",
+        cardDeskDesc: "Búsqueda de participantes, impresión y entrega de credenciales.",
+        cardDeskBtn: "Abrir",
         cardFinanceTitle: "Módulo de Finanzas",
         cardFinanceDesc: "Gestión de presupuesto, cobros y operaciones financieras.",
         cardFinanceBtn: "Abrir",
@@ -8959,6 +9210,347 @@ def modules_ui():
         window.location.href = "/";
       });
     }
+    function quickDeskToNum(v, d) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : d;
+    }
+    function quickDeskEsc(v) {
+      return String(v || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+    function quickDeskFold(text) {
+      return String(text || "")
+        .toLocaleLowerCase("tr-TR")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replaceAll("ı", "i")
+        .replaceAll("ş", "s")
+        .replaceAll("ğ", "g")
+        .replaceAll("ü", "u")
+        .replaceAll("ö", "o")
+        .replaceAll("ç", "c");
+    }
+    function quickDeskMapBadgeValue(item, source) {
+      const raw = (item && item.row && item.row.data) || {};
+      const fullName = ((item && item.ad) || "") + " " + ((item && item.soyad) || "");
+      if (source === "ad_soyad") return String(fullName || "").trim();
+      if (source === "kurum") return String((item && item.kurum) || raw.f_kurum || raw.kurum || "");
+      if (source === "unvan") return String(raw.unvan || raw.f_unvan || raw.title || "");
+      if (source === "gorev") return String(raw.gorev || raw.f_gorev || raw.role || "");
+      if (source === "kimlik") return String((item && item.kimlik) || "");
+      if (source === "telefon") return String((item && item.telefon) || "");
+      if (source === "mail") return String((item && item.mail) || "");
+      if (source === "proje") return String((item && item.project_id) || "");
+      return "";
+    }
+    function quickDeskCsvTokens(v) {
+      return String(v || "").split(",").map((x) => String(x || "").trim().toLowerCase()).filter(Boolean);
+    }
+    function quickDeskParticipantType(item) {
+      const raw = (item && item.row && item.row.data) || {};
+      return String(raw.katilim_turu || raw.participation_type || raw.kayit_turu || raw.registration_type || "").trim().toLowerCase();
+    }
+    function quickDeskPickBadgeTemplate(item) {
+      const list = Array.isArray(quickDeskBadgeTemplates) ? quickDeskBadgeTemplates : [];
+      if (!list.length) return null;
+      const active = list.find((x) => String((x && x.id) || "") === String(quickDeskActiveBadgeTemplateId || "")) || list[0];
+      const pType = quickDeskParticipantType(item);
+      if (!pType) return active;
+      const matched = list.find((t) => {
+        const toks = quickDeskCsvTokens(t && t.eligibility_participation_types);
+        return toks.length && toks.includes(pType);
+      });
+      return matched || active;
+    }
+    function quickDeskNormalizeRow(r) {
+      const d = (r && r.data) || {};
+      const fullName = d.ad_soyad || d.full_name || d.passenger_name || d.adsoyad || "";
+      const fullParts = String(fullName || "").trim().split(" ").map((p) => String(p || "").trim()).filter(Boolean);
+      const firstFromFull = fullParts.length ? fullParts[0] : "";
+      const lastFromFull = fullParts.length > 1 ? fullParts.slice(1).join(" ") : "";
+      const rawOrgId = String(d.project_person_code || d.f_project_person_code || d.organization_id || d.org_id || d.f_id || "").trim().toUpperCase();
+      const orgMatch = rawOrgId.match(/([A-Z0-9]{6})$/);
+      return {
+        row: r,
+        id: r && r.id,
+        search_id: String((r && r.id) || "").trim(),
+        ad: d.isim || d.f_isim || d.ad || d.first_name || firstFromFull || "",
+        soyad: d.soyisim || d.f_soyisim || d.soyad || d.last_name || lastFromFull || "",
+        kimlik: d.kimlik_no || d.f_kimlik || "",
+        org_id: orgMatch ? orgMatch[1] : rawOrgId,
+        telefon: d.telefon || d.f_telefon || "",
+        kurum: d.kurum || d.f_kurum || "",
+        project_id: r && r.project_id
+      };
+    }
+    function quickDeskFilterRows(rows, query) {
+      const needle = quickDeskFold(query || "").trim();
+      if (!needle) return [];
+      return (Array.isArray(rows) ? rows : []).map(quickDeskNormalizeRow).filter((item) => {
+        const hay = quickDeskFold([
+          item.search_id,
+          item.ad,
+          item.soyad,
+          item.org_id
+        ].join(" "));
+        return hay.indexOf(needle) >= 0;
+      });
+    }
+    function quickDeskPrintStatusStorageKey() {
+      return "desk_print_status_" + String(quickDeskProjectId || "global");
+    }
+    function quickDeskReadPrintStateMap() {
+      try {
+        const raw = localStorage.getItem(quickDeskPrintStatusStorageKey()) || "{}";
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch (_) {
+        return {};
+      }
+    }
+    function quickDeskSavePrintStateMap(map) {
+      try { localStorage.setItem(quickDeskPrintStatusStorageKey(), JSON.stringify(map || {})); } catch (_) {}
+    }
+    function quickDeskGetPrintState(item, kind) {
+      if (!item || item.id == null) return "none";
+      const pid = String(item.id);
+      const k = String(kind || "").toLowerCase();
+      if (!k) return "none";
+      const map = quickDeskReadPrintStateMap();
+      const row = (map && map[pid]) || {};
+      const v = String(row[k] || "none").toLowerCase();
+      if (v === "pending" || v === "delivered") return v;
+      return "none";
+    }
+    function quickDeskSetPrintState(item, kind, state) {
+      if (!item || item.id == null) return;
+      const pid = String(item.id);
+      const k = String(kind || "").toLowerCase();
+      const st = String(state || "none").toLowerCase();
+      if (!k) return;
+      const map = quickDeskReadPrintStateMap();
+      if (!map[pid] || typeof map[pid] !== "object") map[pid] = {};
+      if (st === "none") delete map[pid][k];
+      else map[pid][k] = (st === "delivered" ? "delivered" : "pending");
+      quickDeskSavePrintStateMap(map);
+    }
+    function quickDeskRenderList() {
+      if (!quickDeskList) return;
+      if (!quickDeskItems.length) {
+        quickDeskList.innerHTML = '<div class="quickdesk-item"><span class="quickdesk-item-meta">Sonuç yok</span></div>';
+        if (quickDeskPrint) quickDeskPrint.disabled = true;
+        return;
+      }
+      quickDeskList.innerHTML = quickDeskItems.map((item, idx) => {
+        const fullName = [item.ad, item.soyad].filter(Boolean).join(" ").trim() || "-";
+        const st = quickDeskGetPrintState(item, "badge");
+        const stateText = st === "delivered" ? "Teslim" : (st === "pending" ? "Basildi" : "Hazir");
+        const meta = [item.search_id, item.org_id].filter(Boolean).join(" | ") || "Katılımcı";
+        return `<button class="quickdesk-item${idx === quickDeskSelectedIdx ? ' active' : ''}" type="button" data-idx="${idx}"><span class="quickdesk-item-main"><span class="quickdesk-item-name">${quickDeskEsc(fullName)}</span><span class="quickdesk-item-meta">${quickDeskEsc(meta)}</span></span><span class="quickdesk-item-state ${quickDeskEsc(st || "none")}">${quickDeskEsc(stateText)}</span></button>`;
+      }).join("");
+      if (quickDeskPrint) {
+        const active = quickDeskItems[quickDeskSelectedIdx] || null;
+        const st = active ? quickDeskGetPrintState(active, "badge") : "none";
+        quickDeskPrint.disabled = quickDeskSelectedIdx < 0 || st === "pending" || st === "delivered";
+      }
+    }
+    function quickDeskSelect(nextIdx) {
+      if (!quickDeskItems.length) {
+        quickDeskSelectedIdx = -1;
+        quickDeskRenderList();
+        return;
+      }
+      if (nextIdx < 0) nextIdx = 0;
+      if (nextIdx >= quickDeskItems.length) nextIdx = quickDeskItems.length - 1;
+      quickDeskSelectedIdx = nextIdx;
+      quickDeskRenderList();
+      const active = quickDeskList ? quickDeskList.querySelector(`.quickdesk-item[data-idx="${nextIdx}"]`) : null;
+      try { if (active) active.scrollIntoView({ block: 'nearest' }); } catch (_) {}
+    }
+    async function quickDeskLoadSettings() {
+      try {
+        const qs = new URLSearchParams();
+        qs.set("module_name", "yonetim");
+        qs.set("entity_type", "ayarlar");
+        qs.set("limit", "1");
+        if (quickDeskProjectId) qs.set("project_id", String(quickDeskProjectId));
+        const res = await fetch("/module-data?" + qs.toString(), { headers: { Authorization: `Bearer ${token}` } });
+        const list = await res.json().catch(() => []);
+        if (!res.ok) return;
+        const row = Array.isArray(list) && list.length ? list[0] : null;
+        const d = row && row.data ? row.data : {};
+        quickDeskActiveBadgeTemplateId = String(d.active_badge_template_id || "");
+        quickDeskBadgeTemplates = Array.isArray(d.badge_templates) ? d.badge_templates : [];
+        const allBadgeTpl = quickDeskBadgeTemplates;
+        const activeBadgeTpl = allBadgeTpl.find((x) => String((x && x.id) || "") === quickDeskActiveBadgeTemplateId) || allBadgeTpl[0] || null;
+        const bl = activeBadgeTpl || d.badge_layout || {};
+        quickDeskBadgeLayout = {
+          width_mm: quickDeskToNum(bl.width_mm, 90),
+          height_mm: quickDeskToNum(bl.height_mm, 55),
+          margin_top_mm: quickDeskToNum(bl.margin_top_mm, 4),
+          margin_left_mm: quickDeskToNum(bl.margin_left_mm, 4),
+          margin_right_mm: quickDeskToNum(bl.margin_right_mm, 4),
+          margin_bottom_mm: quickDeskToNum(bl.margin_bottom_mm, 4),
+          fields: Array.isArray(bl.fields) && bl.fields.length ? bl.fields : quickDeskBadgeLayout.fields
+        };
+      } catch (_) {}
+    }
+    async function quickDeskLoadPeople(force) {
+      if (!quickDeskProjectId) {
+        await ensureActiveProject();
+      }
+      if (!quickDeskProjectId) return [];
+      if (!force && Array.isArray(quickDeskAllRows) && quickDeskAllRows.length) return quickDeskAllRows;
+      const qs = new URLSearchParams();
+      qs.set("module_name", "kayit");
+      qs.set("limit", "2000");
+      qs.set("project_id", String(quickDeskProjectId));
+      const res = await fetch("/module-data?" + qs.toString(), { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json().catch(() => []);
+      if (!res.ok) throw new Error((data && data.detail) || "Katılımcılar alınamadı");
+      quickDeskAllRows = (Array.isArray(data) ? data : []).filter((row) => {
+        const entityType = String((row && row.entity_type) || "").trim().toLowerCase();
+        return !entityType || entityType === "katilimci" || entityType === "participant" || entityType === "kisi" || entityType === "person";
+      });
+      if (quickDeskDebug) quickDeskDebug.textContent = `Proje: ${String(quickDeskProjectId || "-")} | Yüklenen kişi: ${quickDeskAllRows.length}`;
+      return quickDeskAllRows;
+    }
+    function quickDeskPrintBlob(blob) {
+      const blobUrl = URL.createObjectURL(blob);
+      const frame = document.createElement("iframe");
+      frame.style.position = "fixed";
+      frame.style.right = "0";
+      frame.style.bottom = "0";
+      frame.style.width = "0";
+      frame.style.height = "0";
+      frame.style.border = "0";
+      frame.style.opacity = "0";
+      frame.src = blobUrl;
+      const cleanup = () => {
+        try { URL.revokeObjectURL(blobUrl); } catch (_) {}
+        try { if (frame.parentNode) frame.parentNode.removeChild(frame); } catch (_) {}
+      };
+      frame.onload = () => {
+        try {
+          const w = frame.contentWindow;
+          if (w) {
+            w.focus();
+            setTimeout(() => { try { w.print(); } catch (_) {} }, 120);
+            setTimeout(cleanup, 12000);
+            return;
+          }
+        } catch (_) {}
+        setTimeout(cleanup, 2000);
+      };
+      document.body.appendChild(frame);
+    }
+    async function quickDeskRunPrint() {
+      const item = quickDeskItems[quickDeskSelectedIdx] || null;
+      if (!item) {
+        if (quickDeskInfo) quickDeskInfo.textContent = "Önce bir katılımcı seçin.";
+        return;
+      }
+      const badgeState = quickDeskGetPrintState(item, "badge");
+      if (badgeState === "pending" || badgeState === "delivered") {
+        if (quickDeskInfo) quickDeskInfo.textContent = badgeState === "delivered" ? "Bu yaka kartı zaten teslim edilmiş." : "Bu yaka kartı daha önce basılmış; teslim için normal Desk'i kullanın.";
+        quickDeskRenderList();
+        return;
+      }
+      try {
+        if (quickDeskInfo) quickDeskInfo.textContent = "Yaka kartı hazırlanıyor...";
+        const template = quickDeskPickBadgeTemplate(item);
+        const layoutToUse = template ? {
+          width_mm: quickDeskToNum(template.width_mm, quickDeskBadgeLayout.width_mm),
+          height_mm: quickDeskToNum(template.height_mm, quickDeskBadgeLayout.height_mm),
+          margin_top_mm: quickDeskToNum(template.margin_top_mm, quickDeskBadgeLayout.margin_top_mm),
+          margin_left_mm: quickDeskToNum(template.margin_left_mm, quickDeskBadgeLayout.margin_left_mm),
+          margin_right_mm: quickDeskToNum(template.margin_right_mm, quickDeskBadgeLayout.margin_right_mm),
+          margin_bottom_mm: quickDeskToNum(template.margin_bottom_mm, quickDeskBadgeLayout.margin_bottom_mm),
+          template_data_url: String(template.template_data_url || ""),
+          fields: Array.isArray(template.fields) ? template.fields : quickDeskBadgeLayout.fields
+        } : quickDeskBadgeLayout;
+        const fields = (Array.isArray(layoutToUse.fields) ? layoutToUse.fields : []).map((f) => ({
+          ...f,
+          text: quickDeskMapBadgeValue(item, String(f.source || "ad_soyad"))
+        }));
+        const res = await fetch("/render/badge-pdf", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ layout: layoutToUse, fields })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || "PDF oluşturulamadı");
+        }
+        const blob = await res.blob();
+        quickDeskSetPrintState(item, "badge", "pending");
+        quickDeskPrintBlob(blob);
+        quickDeskRenderList();
+        if (quickDeskInfo) quickDeskInfo.textContent = "Yaka kartı PDF olarak açıldı. Aynı kayıt artık normal Desk'te de basılamaz.";
+      } catch (err) {
+        if (quickDeskInfo) quickDeskInfo.textContent = "Hata: " + (err && err.message ? err.message : "Yaka kartı oluşturulamadı");
+      }
+    }
+    let quickDeskSearchTimer = null;
+    async function quickDeskSearchRun() {
+      const value = String((quickDeskSearch && quickDeskSearch.value) || "").trim();
+      if (!quickDeskProjectId) {
+        await ensureActiveProject();
+      }
+      if (!quickDeskProjectId) {
+        if (quickDeskInfo) quickDeskInfo.textContent = "Aktif proje seçmeden hızlı desk kullanılamaz.";
+        if (quickDeskDebug) quickDeskDebug.textContent = "Aktif proje yok";
+        return;
+      }
+      try {
+        if (quickDeskInfo) quickDeskInfo.textContent = "Aranıyor...";
+        const rows = await quickDeskLoadPeople(false);
+        quickDeskItems = value.length < 1
+          ? rows.map(quickDeskNormalizeRow).slice(0, 25)
+          : quickDeskFilterRows(rows, value).slice(0, 25);
+        quickDeskSelectedIdx = quickDeskItems.length ? 0 : -1;
+        quickDeskRenderList();
+        if (quickDeskInfo) {
+          quickDeskInfo.textContent = value.length < 1
+            ? `${quickDeskItems.length} katılımcı gösteriliyor. İsim veya ID ile filtreleyin.`
+            : (quickDeskItems.length ? `${quickDeskItems.length} sonuç bulundu.` : "Sonuç bulunamadı.");
+        }
+      } catch (err) {
+        quickDeskItems = [];
+        quickDeskSelectedIdx = -1;
+        quickDeskRenderList();
+        if (quickDeskInfo) quickDeskInfo.textContent = "Hata: " + (err && err.message ? err.message : "Arama yapılamadı");
+        if (quickDeskDebug) quickDeskDebug.textContent = "Debug hata: " + (err && err.message ? err.message : "bilinmiyor");
+      }
+    }
+    if (quickDeskSearch) {
+      quickDeskSearch.addEventListener("focus", () => { quickDeskSearchRun(); });
+      quickDeskSearch.addEventListener("input", () => {
+        if (quickDeskSearchTimer) clearTimeout(quickDeskSearchTimer);
+        quickDeskSearchTimer = setTimeout(quickDeskSearchRun, 180);
+      });
+      quickDeskSearch.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowDown") { e.preventDefault(); quickDeskSelect(quickDeskSelectedIdx + 1); return; }
+        if (e.key === "ArrowUp") { e.preventDefault(); quickDeskSelect(quickDeskSelectedIdx - 1); return; }
+        if (e.key === "Enter") { e.preventDefault(); quickDeskRunPrint(); }
+      });
+    }
+    if (quickDeskList) {
+      quickDeskList.addEventListener("click", (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest(".quickdesk-item[data-idx]") : null;
+        if (!btn) return;
+        const idx = Number(btn.getAttribute("data-idx") || -1);
+        if (!Number.isFinite(idx) || idx < 0) return;
+        quickDeskSelect(idx);
+      });
+    }
+    if (quickDeskPrint) quickDeskPrint.addEventListener("click", quickDeskRunPrint);
+    quickDeskLoadSettings();
+    ensureActiveProject().then((ok) => { if (ok) quickDeskSearchRun(); });
+    window.addEventListener("load", () => { quickDeskSearchRun(); });
   </script>
   <script>
     (function(){
@@ -31816,6 +32408,7 @@ def desk_ui():
             margin_left_mm: toNum(template.margin_left_mm, badgeLayout.margin_left_mm),
             margin_right_mm: toNum(template.margin_right_mm, badgeLayout.margin_right_mm),
             margin_bottom_mm: toNum(template.margin_bottom_mm, badgeLayout.margin_bottom_mm),
+            template_data_url: String(template.template_data_url || ""),
             fields: Array.isArray(template.fields) ? template.fields : badgeLayout.fields
           } : badgeLayout;
           const fields = (Array.isArray(layoutToUse.fields) ? layoutToUse.fields : []).map((f) => ({
@@ -31949,6 +32542,7 @@ def desk_ui():
                   margin_left_mm: toNum(template.margin_left_mm, badgeLayout.margin_left_mm),
                   margin_right_mm: toNum(template.margin_right_mm, badgeLayout.margin_right_mm),
                   margin_bottom_mm: toNum(template.margin_bottom_mm, badgeLayout.margin_bottom_mm),
+                  template_data_url: String(template.template_data_url || ""),
                   fields: Array.isArray(template.fields) ? template.fields : badgeLayout.fields
                 } : badgeLayout;
                 const fields = (Array.isArray(layoutToUse.fields) ? layoutToUse.fields : []).map((f) => ({ ...f, text: mapBadgeValue(item, String(f.source || "ad_soyad")) }));
@@ -32095,21 +32689,41 @@ def desk_ui():
       if (editCancelBtn) editCancelBtn.addEventListener("click", closeEditModal);
       if (editSaveBtn) editSaveBtn.addEventListener("click", () => saveEditModal().catch((e) => { info.textContent = "Hata: " + (e && e.message ? e.message : "Kişi güncellenemedi"); }));
       if (editOverlay) editOverlay.addEventListener("click", (e) => { if (e.target === editOverlay) closeEditModal(); });
-      q.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") { applyFilter(); return; }
+      function handleDeskListArrowKey(e){
+        if (!e) return false;
         if (e.key === "ArrowDown") {
           e.preventDefault();
           selectRowByIndex((selectedIdx < 0 ? 0 : selectedIdx + 1));
-          return;
+          return true;
         }
         if (e.key === "ArrowUp") {
           e.preventDefault();
           selectRowByIndex((selectedIdx < 0 ? 0 : selectedIdx - 1));
+          return true;
+        }
+        return false;
+      }
+      q.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (filtered.length) {
+            if (selectedIdx < 0 || selectedIdx >= filtered.length) selectedIdx = 0;
+            renderTable(filtered);
+            handlePrintAction("on", null);
+            return;
+          }
+          applyFilter();
           return;
         }
+        if (handleDeskListArrowKey(e)) return;
       });
       q.addEventListener("input", () => { applyFilter(); });
-      if (searchField) searchField.addEventListener("change", () => { applyFilter(); });
+      if (searchField) {
+        searchField.addEventListener("change", () => { applyFilter(); });
+        searchField.addEventListener("keydown", (e) => {
+          if (handleDeskListArrowKey(e)) return;
+        });
+      }
       const hotkeys = (e) => {
         const key = String(e.key || "").toLowerCase();
         const code = String(e.code || "");
@@ -32117,6 +32731,13 @@ def desk_ui():
         const t = e.target;
         const tag = String((t && t.tagName) || "").toLowerCase();
         const typingTarget = !!(t && (tag === "input" || tag === "textarea" || tag === "select" || t.isContentEditable));
+        const deskNavFromSearch = t === q || (!!searchField && t === searchField);
+        if (!mod && !e.altKey && deskNavFromSearch && (key === "arrowdown" || key === "arrowup")) {
+          e.preventDefault();
+          e.stopPropagation();
+          selectRowByIndex((selectedIdx < 0 ? 0 : selectedIdx + (key === "arrowdown" ? 1 : -1)));
+          return;
+        }
         if (!mod && !e.altKey && !typingTarget) {
           if (key === "arrowdown") {
             e.preventDefault();
