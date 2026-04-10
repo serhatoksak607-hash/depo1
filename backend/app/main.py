@@ -6145,6 +6145,65 @@ def health(db: Session = Depends(get_db)):
     return {"status": overall, "database": db_status, "redis": redis_status}
 
 
+def _participant_date_range(project: Project | None) -> str:
+    if not project:
+        return "11-12 Nisan 2026"
+    start = str(getattr(project, "start_date", "") or "").strip()
+    end = str(getattr(project, "end_date", "") or "").strip()
+    if start and end and start == end:
+        return start
+    if start and end:
+        return f"{start} - {end}"
+    return start or end or "11-12 Nisan 2026"
+
+
+def _participant_location(project: Project | None) -> str:
+    if not project:
+        return "Park Dedeman Otel - ESKİŞEHİR"
+    city = str(getattr(project, "city", "") or "").strip()
+    return city or "Park Dedeman Otel - ESKİŞEHİR"
+
+
+@app.get("/api/app/bootstrap")
+def participant_app_bootstrap(
+    role: str = Query("driver"),
+    db: Session = Depends(get_db),
+):
+    active_project = (
+        db.query(Project)
+        .filter(Project.is_active == True)  # noqa: E712
+        .order_by(Project.id.desc())
+        .first()
+    )
+    latest_transfer = (
+        db.query(Transfer)
+        .filter(Transfer.project_id == getattr(active_project, "id", None))
+        .order_by(Transfer.id.desc())
+        .first()
+    ) if active_project else None
+
+    project_name = str(getattr(active_project, "name", "") or "").strip() or "Eskişehir Ürojinekoloji Sempozyumu"
+    project_id = str(getattr(active_project, "system_code", "") or getattr(active_project, "operation_code", "") or getattr(active_project, "id", "") or "eskisehir-urojinekoloji-sempozyumu-2026").strip() or "eskisehir-urojinekoloji-sempozyumu-2026"
+    participant_name = str(getattr(latest_transfer, "passenger_name", "") or "Serhat OKŞAK").strip() or "Serhat OKŞAK"
+
+    return {
+        "role": role if role in {"driver", "greeter"} else "driver",
+        "appConfig": {
+            "project_id": project_id,
+            "content": {
+                "project_name": project_name,
+                "project_date_range": _participant_date_range(active_project),
+                "project_location": _participant_location(active_project),
+                "project_qr_value": f"PROJECT:{project_id}|PARTICIPANT:{participant_name.replace(' ', '-')}",
+            },
+        },
+        "shellProfile": {
+            "full_name": participant_name,
+        },
+        "syncedAt": _now_istanbul().isoformat(),
+    }
+
+
 @app.get("/cities")
 def list_cities():
     special = {
@@ -8064,15 +8123,18 @@ def modules_ui():
     }
     .reports-band {
       width:100%;
-      margin:-18px 0 0 0;
+      margin:2px 0 0 0;
       display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;
     }
     .reports-band-section {
       width:100%;
-      margin:-12px 0 0 0;
+      margin:0 0 0 0;
       display: flex;
       align-items: center;
       gap: 0;
+      position: relative;
+      height: 0;
+      overflow: visible;
     }
     .reports-band-kicker {
       display: inline-flex;
@@ -8089,9 +8151,13 @@ def modules_ui():
       white-space: nowrap;
     }
     .reports-band-divider {
-      height: 1px;
-      width: 100%;
-      flex: 1 1 auto;
+      position:absolute;
+      left:0;
+      right:0;
+      top:-8px;
+      height: 3px;
+      width: auto;
+      flex: 0 0 auto;
       background: linear-gradient(90deg, rgba(131, 159, 198, 0.15) 0%, rgba(131, 159, 198, 0.55) 18%, rgba(131, 159, 198, 0.55) 82%, rgba(131, 159, 198, 0.15) 100%);
     }
     .reports-band-card {
@@ -8135,16 +8201,17 @@ def modules_ui():
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 28px;
-      height: 28px;
-      padding: 0 8px;
+      min-width: 34px;
+      height: 34px;
+      padding: 0 10px;
       border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
+      font-size: 13px;
+      font-weight: 900;
       line-height: 1;
-      background: #e8f0fb;
-      color: #1f4f8f;
-      border: 1px solid #cfe0f4;
+      background: #ffffff;
+      color: #153e75;
+      border: 1px solid #bfd3ea;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.10);
       flex: 0 0 auto;
       cursor: pointer;
     }
@@ -8317,9 +8384,9 @@ def modules_ui():
       background: linear-gradient(90deg, #e11d48 0%, rgba(225, 29, 72, 0.16) 100%);
     }
     .reports-band-card.severity-critical .reports-band-count {
-      background: #fff1f5;
+      background: #ffffff;
       color: #9f1239;
-      border-color: #f3d6e1;
+      border-color: #efc0d0;
     }
     .reports-band-card.severity-critical .reports-band-arrow {
       background: #fff7fa;
@@ -8365,9 +8432,9 @@ def modules_ui():
       background: linear-gradient(90deg, #d69e2e 0%, rgba(214, 158, 46, 0.16) 100%);
     }
     .reports-band-card.severity-upcoming .reports-band-count {
-      background: #fff7e7;
+      background: #ffffff;
       color: #9a5a16;
-      border-color: #f0dfb7;
+      border-color: #ead2a5;
     }
     .reports-band-card.severity-upcoming .reports-band-arrow {
       background: #fffaf0;
@@ -8413,9 +8480,9 @@ def modules_ui():
       background: linear-gradient(90deg, #3b82f6 0%, rgba(59, 130, 246, 0.16) 100%);
     }
     .reports-band-card.severity-info .reports-band-count {
-      background: #edf4ff;
+      background: #ffffff;
       color: #295fca;
-      border-color: #d5e3fa;
+      border-color: #c9ddf6;
     }
     .reports-band-card.severity-info .reports-band-arrow {
       background: #f4f8ff;
@@ -8518,35 +8585,31 @@ def modules_ui():
     }
     .quickdesk-search:focus { outline:none; border-color:#1b9cf6; box-shadow:0 0 0 4px rgba(27,156,246,0.12); }
     .quickdesk-list {
-      border:1px solid #d7c27a; border-radius:14px; background:linear-gradient(180deg, #fffdfa 0%, #fff8ea 100%); min-height:168px; overflow:auto; flex:1 1 auto; padding:4px 0;
+      border:1px solid #e6ebf3; border-radius:12px; background:#ffffff; min-height:168px; overflow:auto; flex:1 1 auto; padding:0;
+      font-size:12px;
+    }
+    .quickdesk-head {
+      display:none;
     }
     .quickdesk-item {
-      width:100%; border:0; border-bottom:1px solid #eedfb0; background:transparent; text-align:left; padding:9px 12px; cursor:pointer;
-      display:flex; align-items:center; justify-content:space-between; gap:10px; color:#16325c; border-radius:0;
-      box-shadow:none; appearance:none;
-      transition:background-color .14s ease, color .14s ease;
+      width:100%; border:0; border-bottom:1px solid #e9eef6; background:transparent; text-align:left; padding:11px 12px; cursor:pointer;
+      display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:10px; align-items:center;
+      color:#1f2937; border-radius:0; box-shadow:none; appearance:none;
+      transition:background-color .12s ease, color .12s ease;
     }
     .quickdesk-item:last-child { border-bottom:0; }
     .quickdesk-item:hover {
-      transform:none;
-      border-color:transparent;
-      box-shadow:none;
-      background:rgba(216,177,77,0.10);
+      transform:none; border-color:transparent; box-shadow:none; background:#f8fafc;
     }
     .quickdesk-item.active {
-      background:rgba(216,177,77,0.18);
-      border-color:transparent;
-      box-shadow:none;
+      background:#f1f7ff; border-color:transparent; box-shadow:none;
     }
-    .quickdesk-item-main { min-width:0; display:flex; flex-direction:column; gap:4px; }
-    .quickdesk-item-name { font-size:13px; font-weight:800; color:#5a3d00; }
-    .quickdesk-item-meta { font-size:11px; color:#7b6a42; font-weight:700; }
-    .quickdesk-item-state {
-      flex:0 0 auto; align-self:center; border-radius:999px; padding:3px 8px; font-size:10px; font-weight:800;
-      letter-spacing:.2px; border:1px solid #dec98b; background:#fff7dd; color:#8a6b1a;
-    }
-    .quickdesk-item-state.pending { background:#eef6ff; border-color:#b7d3ff; color:#1d4f91; }
-    .quickdesk-item-state.delivered { background:#ecfdf3; border-color:#b7e2c6; color:#146c43; }
+    .quickdesk-main { min-width:0; }
+    .quickdesk-name { font-size:13px; font-weight:700; color:#1e3a8a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .quickdesk-meta { font-size:11px; color:#5c6b82; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .quickdesk-state { font-size:11px; font-weight:700; color:#5c6b82; white-space:nowrap; }
+    .quickdesk-state.pending { color:#a56a1e; }
+    .quickdesk-state.delivered { color:#15803d; }
     .quickdesk-actions { display:flex; gap:8px; align-items:center; justify-content:space-between; }
     .quickdesk-btn {
       width:100%; background:linear-gradient(180deg, #d8b14d 0%, #b88718 100%); color:#fffdf6; text-decoration:none; border-radius:10px; padding:10px 12px; border:1px solid #9f7416;
@@ -8554,6 +8617,76 @@ def modules_ui():
     }
     .quickdesk-btn:disabled { opacity:0.55; cursor:not-allowed; }
     .quickdesk-status { min-height:32px; color:#5c6b82; font-size:12px; text-align:left; }
+    .desk-ops-badge {
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+      min-width:184px;
+      padding:7px 10px;
+      border-radius:10px;
+      border:1px solid rgba(159,216,255,0.38);
+      background:rgba(7,19,46,0.34);
+      color:#dcecff;
+      box-sizing:border-box;
+    }
+    .desk-ops-title {
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.18px;
+      color:#9fd8ff;
+      white-space:nowrap;
+    }
+    .desk-ops-meta {
+      font-size:11px;
+      font-weight:600;
+      color:#f8fbff;
+      white-space:nowrap;
+    }
+    .desk-info-card {
+      min-height:100%;
+      height:100%;
+      justify-content:center;
+      width:100%;
+      border-radius:14px;
+      border-color:rgba(159,216,255,0.28);
+      box-shadow:0 10px 24px rgba(96,143,214,0.10);
+      background:linear-gradient(180deg, #fbfdff 0%, #f4f8ff 100%);
+      padding:14px 14px 12px;
+      box-sizing:border-box;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .desk-info-title {
+      font-size:18px;
+      font-weight:800;
+      color:#18407c;
+      width:100%;
+      text-align:left;
+    }
+    .desk-info-line {
+      width:100%;
+      border:1px solid #dbe7f7;
+      border-radius:10px;
+      background:#ffffff;
+      padding:8px 10px;
+      box-sizing:border-box;
+    }
+    .desk-info-k {
+      font-size:10px;
+      font-weight:800;
+      color:#68809f;
+      text-transform:uppercase;
+      letter-spacing:.24px;
+    }
+    .desk-info-v {
+      margin-top:3px;
+      font-size:13px;
+      font-weight:700;
+      color:#193a6a;
+      line-height:1.3;
+    }
     .card-register .card-shape,
     .card-hotel .card-shape,
     .card-meeting .card-shape,
@@ -8602,6 +8735,18 @@ def modules_ui():
       box-shadow:0 10px 24px rgba(217, 178, 76, 0.12);
       background:linear-gradient(180deg, rgba(255,254,248,0.96) 0%, rgba(255,252,243,0.94) 100%);
       padding:14px 14px 12px;
+    }
+    .desk-info-floating {
+      position:absolute;
+      left:100%;
+      top:0;
+      bottom:0;
+      width:240px;
+      margin-left:16px;
+      z-index:2;
+      padding:0;
+      box-sizing:border-box;
+      display:flex;
     }
     #reportsDockMain {
       min-width:0;
@@ -8708,6 +8853,10 @@ def modules_ui():
         </div>
         <div class="right-panel">
           <span id="activeProjectBadge" class="project-badge">AKTİF PROJE: -</span>
+          <div id="deskOpsBadge" class="desk-ops-badge">
+            <div id="deskOpsTitle" class="desk-ops-title">Kayıt - Konaklama Desk</div>
+            <div id="deskOpsMeta" class="desk-ops-meta">Desk 1 | Bilgisayar 1 | Kullanıcı ID 1</div>
+          </div>
         </div>
       </div>
       <select id="langSelect" class="lang-mini">
@@ -8824,6 +8973,27 @@ def modules_ui():
         </div>
       </div>
       <div id="reportsDockMain"></div>
+      <div class="desk-info-floating">
+        <div class="desk-info-card">
+          <div class="desk-info-title">Kayıt Desk Bilgileri</div>
+          <div class="desk-info-line">
+            <div class="desk-info-k">Alan</div>
+            <div id="deskInfoArea" class="desk-info-v">Kayıt - Konaklama</div>
+          </div>
+          <div class="desk-info-line">
+            <div class="desk-info-k">Desk</div>
+            <div id="deskInfoDeskNo" class="desk-info-v">1</div>
+          </div>
+          <div class="desk-info-line">
+            <div class="desk-info-k">Bilgisayar</div>
+            <div id="deskInfoComputerNo" class="desk-info-v">1</div>
+          </div>
+          <div class="desk-info-line">
+            <div class="desk-info-k">Kullanıcı ID</div>
+            <div id="deskInfoUserId" class="desk-info-v">1</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <button id="logoutFab" class="logout-fab" type="button">&rarr; Çıkış</button><script>
@@ -8879,10 +9049,17 @@ def modules_ui():
     const quickDeskInfo = document.getElementById('quickDeskInfo');
     const quickDeskDebug = document.getElementById('quickDeskDebug');
     const quickDeskPrint = document.getElementById('quickDeskPrint');
+    const deskOpsTitle = document.getElementById('deskOpsTitle');
+    const deskOpsMeta = document.getElementById('deskOpsMeta');
+    const deskInfoArea = document.getElementById('deskInfoArea');
+    const deskInfoDeskNo = document.getElementById('deskInfoDeskNo');
+    const deskInfoComputerNo = document.getElementById('deskInfoComputerNo');
+    const deskInfoUserId = document.getElementById('deskInfoUserId');
     let quickDeskProjectId = null;
     let quickDeskAllRows = [];
     let quickDeskItems = [];
     let quickDeskSelectedIdx = -1;
+    let deskOpsUserId = "";
     let quickDeskBadgeLayout = {
       width_mm: 90,
       height_mm: 55,
@@ -8899,6 +9076,37 @@ def modules_ui():
     };
     let quickDeskBadgeTemplates = [];
     let quickDeskActiveBadgeTemplateId = "";
+    function renderDeskOpsInfo(cfg) {
+      const source = cfg || {};
+      const area = String(
+        source.desk_scope_label
+        || source.desk_area_label
+        || source.desk_area
+        || localStorage.getItem("desk_scope_label")
+        || "Kayıt - Konaklama"
+      ).trim() || "Kayıt - Konaklama";
+      const deskNo = String(
+        source.desk_station_no
+        || source.desk_no
+        || source.station_no
+        || localStorage.getItem("desk_station_no")
+        || "1"
+      ).trim() || "1";
+      const pcNo = String(
+        source.desk_computer_no
+        || source.computer_no
+        || source.pc_no
+        || localStorage.getItem("desk_computer_no")
+        || "1"
+      ).trim() || "1";
+      const userId = String(source.user_id || deskOpsUserId || localStorage.getItem("desk_user_id") || "1").trim() || "1";
+      if (deskOpsTitle) deskOpsTitle.textContent = area + " Desk";
+      if (deskOpsMeta) deskOpsMeta.textContent = `Desk ${deskNo} | Bilgisayar ${pcNo} | Kullanıcı ID ${userId}`;
+      if (deskInfoArea) deskInfoArea.textContent = area;
+      if (deskInfoDeskNo) deskInfoDeskNo.textContent = deskNo;
+      if (deskInfoComputerNo) deskInfoComputerNo.textContent = pcNo;
+      if (deskInfoUserId) deskInfoUserId.textContent = userId;
+    }
     const moduleDomMap = {
       transfer: { navId: 'navTransfer', cardBtnId: 'cardTransferBtn' },
       kayit: { navId: 'navRegister', cardBtnId: 'cardRegisterBtn' },
@@ -8950,6 +9158,7 @@ def modules_ui():
         const me = await res.json();
         if (!res.ok) { const uiLang = localStorage.getItem('ui_lang') || ''; localStorage.clear(); sessionStorage.clear(); if (uiLang) localStorage.setItem('ui_lang', uiLang); window.location.href = '/'; return false; }
         const role = String(me.role || '').trim().toLowerCase();
+        deskOpsUserId = String(me.id || "").trim();
         applyVisibleModules(me.visible_modules, role);
         if (!me.active_project_id && role !== 'superadmin') { window.location.href = '/project-select-ui'; return false; }
         quickDeskProjectId = me.active_project_id || null;
@@ -8965,6 +9174,7 @@ def modules_ui():
       }
     };
     ensureActiveProject();
+    renderDeskOpsInfo(null);
     const i18n = {
       tr: {
         navHome: "Ana Sayfa",
@@ -9340,17 +9550,18 @@ def modules_ui():
     function quickDeskRenderList() {
       if (!quickDeskList) return;
       if (!quickDeskItems.length) {
-        quickDeskList.innerHTML = '<div class="quickdesk-item"><span class="quickdesk-item-meta">Sonuç yok</span></div>';
+        quickDeskList.innerHTML = '<div class="quickdesk-item"><div class="quickdesk-main"><div class="quickdesk-name">Sonuç yok</div><div class="quickdesk-meta">Arama kriterini değiştirin.</div></div><div class="quickdesk-state">-</div></div>';
         if (quickDeskPrint) quickDeskPrint.disabled = true;
         return;
       }
-      quickDeskList.innerHTML = quickDeskItems.map((item, idx) => {
+      const rowsHtml = quickDeskItems.map((item, idx) => {
         const fullName = [item.ad, item.soyad].filter(Boolean).join(" ").trim() || "-";
         const st = quickDeskGetPrintState(item, "badge");
         const stateText = st === "delivered" ? "Teslim" : (st === "pending" ? "Basildi" : "Hazir");
-        const meta = [item.search_id, item.org_id].filter(Boolean).join(" | ") || "Katılımcı";
-        return `<button class="quickdesk-item${idx === quickDeskSelectedIdx ? ' active' : ''}" type="button" data-idx="${idx}"><span class="quickdesk-item-main"><span class="quickdesk-item-name">${quickDeskEsc(fullName)}</span><span class="quickdesk-item-meta">${quickDeskEsc(meta)}</span></span><span class="quickdesk-item-state ${quickDeskEsc(st || "none")}">${quickDeskEsc(stateText)}</span></button>`;
+        const meta = [item.search_id || "-", item.org_id || "-"].filter(Boolean).join(" | ");
+        return `<button class="quickdesk-item${idx === quickDeskSelectedIdx ? ' active' : ''}" type="button" data-idx="${idx}"><div class="quickdesk-main"><div class="quickdesk-name">${quickDeskEsc(fullName)}</div><div class="quickdesk-meta">${quickDeskEsc(meta)}</div></div><div class="quickdesk-state ${quickDeskEsc(st || "none")}">${quickDeskEsc(stateText)}</div></button>`;
       }).join("");
+      quickDeskList.innerHTML = rowsHtml;
       if (quickDeskPrint) {
         const active = quickDeskItems[quickDeskSelectedIdx] || null;
         const st = active ? quickDeskGetPrintState(active, "badge") : "none";
@@ -9382,6 +9593,7 @@ def modules_ui():
         if (!res.ok) return;
         const row = Array.isArray(list) && list.length ? list[0] : null;
         const d = row && row.data ? row.data : {};
+        renderDeskOpsInfo(d);
         quickDeskActiveBadgeTemplateId = String(d.active_badge_template_id || "");
         quickDeskBadgeTemplates = Array.isArray(d.badge_templates) ? d.badge_templates : [];
         const allBadgeTpl = quickDeskBadgeTemplates;

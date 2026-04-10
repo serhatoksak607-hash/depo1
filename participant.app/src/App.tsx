@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLoadingScreen } from "@/components/AppLoadingScreen";
 import creatroLogo from "@/assets/brand/formice.png";
+import loginCreatroLogo from "@/assets/brand/formice-login.png";
 import type { Role } from "@/data/types";
 import { formatPersonName } from "@/lib/utils";
 import {
@@ -28,6 +29,16 @@ const ENABLE_WELCOME_VIDEO = false;
 const AUTH_STORAGE_KEY = "participant-auth-v1";
 const AUTH_USERNAME = "CreaTRo";
 const AUTH_PASSWORD = "Micetro25+.";
+const AUTH_PASSWORD_VARIANTS = new Set(["Micetro25+.", "Micetro25+"]);
+const RELEASE_TAG = "CP-2026-04-09-TR-01";
+
+function normalizeUsername(value: string) {
+  return value.trim().toLocaleLowerCase("tr-TR");
+}
+
+function normalizePassword(value: string) {
+  return value.trim();
+}
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => {
@@ -56,9 +67,9 @@ async function preloadCoreData(role: Role) {
 function getWelcomeMessage(date: Date) {
   const hour = date.getHours();
 
-  if (hour < 12) return "Katılımcı paneli hazırlanıyor.";
-  if (hour < 18) return "Katılımcı paneli hazırlanıyor.";
-  return "Katılımcı paneli hazırlanıyor.";
+  if (hour < 12) return "Katılımcı paneli hazırlanıyor...";
+  if (hour < 18) return "Katılımcı paneli hazırlanıyor...";
+  return "Katılımcı paneli hazırlanıyor...";
 }
 
 function mixHexWithWhite(hex: string, whiteRatio: number) {
@@ -85,9 +96,17 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const appConfig = getAppConfig("driver");
+  const loginLogo = loginCreatroLogo;
+  const primaryColor = appConfig.branding.primary_color || "#F28C28";
+  const baseColor = appConfig.branding.base_color || "#102B64";
 
   const handleSubmit = () => {
-    if (username.trim() === AUTH_USERNAME && password === AUTH_PASSWORD) {
+    const hasValidUsername = normalizeUsername(username) === normalizeUsername(AUTH_USERNAME);
+    const hasValidPassword =
+      normalizePassword(password) === AUTH_PASSWORD || AUTH_PASSWORD_VARIANTS.has(normalizePassword(password));
+
+    if (hasValidUsername && hasValidPassword) {
       window.localStorage.setItem(AUTH_STORAGE_KEY, "1");
       setError("");
       onLogin();
@@ -98,27 +117,45 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#102B64]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(242,140,40,0.22),_transparent_42%),linear-gradient(140deg,_#102B64_0%,_#183B7E_52%,_#19564D_100%)]" />
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-5 py-10">
-        <div className="w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-white shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
-          <div className="bg-white px-8 py-8 text-center">
-            <img src={creatroLogo} alt="" className="mx-auto h-20 w-auto object-contain" />
-            <p className="mt-5 text-xs font-bold uppercase tracking-[0.3em] text-[#F28C28]">Participant Login</p>
-            <h1 className="mt-3 text-2xl font-semibold text-[#102B64]">Hoş Geldin</h1>
-            <p className="mt-2 text-sm text-slate-300">Katılımcı uygulamasına giriş yaparak devam edin.</p>
+    <div className="relative min-h-[100dvh] overflow-hidden" style={{ backgroundColor: baseColor }}>
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(circle at top, ${primaryColor}26, transparent 42%), linear-gradient(140deg, ${baseColor} 0%, #183B7E 52%, #19564D 100%)`,
+        }}
+      />
+      <div className="relative z-10 flex min-h-[100dvh] items-center justify-center px-4 py-5 sm:px-5 sm:py-10">
+        <div className="w-full max-w-[460px] rounded-[36px] border border-white/20 bg-slate-950/12 p-2 shadow-[0_28px_90px_rgba(0,0,0,0.34)] backdrop-blur-sm">
+        <div className="w-full overflow-hidden rounded-[28px] border border-white/10 bg-white shadow-[0_24px_72px_rgba(0,0,0,0.32)] sm:rounded-[32px]">
+          <div className="bg-white px-5 pb-4 pt-3 text-center sm:px-8 sm:pb-5 sm:pt-4">
+            <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.32em]" style={{ color: primaryColor }}>
+              PARTICIPANT
+            </p>
+            <h1 className="mt-1.5 text-[24px] font-semibold tracking-[0.01em] sm:text-[28px]" style={{ color: baseColor }}>
+              ForMice Participant
+            </h1>
+            <p className="mt-1 text-sm font-medium text-slate-500">Katılımcı Uygulaması</p>
           </div>
-          <div className="space-y-4 px-8 py-8">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              <p><strong>Kullanıcı:</strong> {AUTH_USERNAME}</p>
-              <p><strong>Şifre:</strong> {AUTH_PASSWORD}</p>
+          <div className="space-y-4 px-5 py-5 sm:px-8 sm:py-7">
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Giriş</p>
+              <p className="text-sm leading-6 text-slate-600">
+                Hesabınızla oturum açın. Proje seçildiğinde toplantı, rezervasyon ve duyuru akışı açılacaktır.
+              </p>
+              <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-400">
+                Sürüm {RELEASE_TAG}
+              </p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Kullanıcı Adı</label>
+              <label className="text-sm font-medium text-slate-700">Kullanıcı adı</label>
               <input
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#F28C28]"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="next"
                 onKeyDown={(event) => {
                   if (event.key === "Enter") handleSubmit();
                 }}
@@ -132,6 +169,10 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#F28C28]"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="done"
                 onKeyDown={(event) => {
                   if (event.key === "Enter") handleSubmit();
                 }}
@@ -146,7 +187,18 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
             >
               Giriş Yap
             </button>
+            <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-slate-50">
+              <div className="flex min-h-[124px] items-center justify-center px-4 py-4 sm:min-h-[136px]">
+                <img
+                  src={loginLogo}
+                  alt="ForMice logosu"
+                  className="h-auto w-full max-w-[250px] object-contain sm:max-w-[290px]"
+                  loading="eager"
+                />
+              </div>
+            </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
@@ -161,7 +213,7 @@ function WelcomeOverlay({ role }: WelcomeOverlayProps) {
   const [isClosing, setIsClosing] = useState(false);
   const appConfig = getAppConfig(role);
   const shellProfile = getShellProfile(role);
-  const logoUrl = appConfig.branding.loading_logo_url || appConfig.branding.logo_url || creatroLogo;
+  const logoUrl = loginCreatroLogo || appConfig.branding.loading_logo_url || appConfig.branding.logo_url || creatroLogo;
   const primaryColor = appConfig.branding.loading_primary_color || appConfig.branding.primary_color || "#F28C28";
   const secondaryColor = mixHexWithWhite(
     appConfig.branding.loading_base_color || appConfig.branding.base_color || "#102B64",
@@ -203,7 +255,7 @@ function WelcomeOverlay({ role }: WelcomeOverlayProps) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(242,140,40,0.22),_transparent_42%),linear-gradient(140deg,_#102B64_0%,_#183B7E_52%,_#19564D_100%)]" />
       <div className="absolute inset-0 flex items-center justify-center">
         <div
-          className={`flex w-full max-w-[320px] flex-col items-center gap-4 px-6 text-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-sm sm:gap-5 ${
+          className={`flex w-full max-w-[460px] flex-col items-center gap-1 px-4 text-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-[520px] sm:gap-2 ${
             isClosing ? "-translate-y-[38vh] scale-[0.64] opacity-15 sm:-translate-y-[34vh] sm:scale-[0.68]" : "translate-y-0 scale-100 opacity-100"
           }`}
         >
@@ -211,16 +263,16 @@ function WelcomeOverlay({ role }: WelcomeOverlayProps) {
             src={logoUrl}
             alt=""
             aria-hidden="true"
-            className="h-14 w-auto max-w-[180px] object-contain sm:h-20 sm:max-w-[240px]"
-            width={240}
-            height={80}
+            className="h-auto w-[360px] max-w-none object-contain sm:w-[430px]"
+            width={430}
+            height={144}
           />
-          <div className={`space-y-1.5 transition-all duration-150 sm:space-y-2 ${isClosing ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"}`}>
-            <p className="text-[11px] font-bold uppercase tracking-[0.24em] sm:text-xs sm:tracking-[0.3em]" style={{ color: primaryColor }}>
+          <div className={`-mt-1 flex w-full max-w-[360px] flex-col items-center space-y-1 text-center transition-all duration-150 sm:max-w-[420px] ${isClosing ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"}`}>
+            <p className="text-base font-bold uppercase tracking-[0.24em] sm:text-lg" style={{ color: primaryColor }}>
               Hoş Geldin
             </p>
-            <p className="text-xl font-semibold tracking-[0.03em] text-white sm:text-2xl sm:tracking-[0.04em]">{welcomeName}</p>
-            <p className="text-[13px] leading-5 sm:text-sm" style={{ color: secondaryColor }}>{welcomeMessage}</p>
+            <p className="text-lg font-semibold tracking-[0.03em] text-white sm:text-xl sm:tracking-[0.04em]">{welcomeName}</p>
+            <p className="text-base font-medium text-slate-200 sm:text-lg" style={{ color: secondaryColor }}>{welcomeMessage}</p>
           </div>
           <div className={`h-1.5 w-32 overflow-hidden rounded-full bg-white/10 transition-all duration-150 sm:w-40 ${isClosing ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"}`}>
             <div className="h-full w-1/2 rounded-full" style={{ backgroundColor: primaryColor }} />

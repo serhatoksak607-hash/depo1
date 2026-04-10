@@ -15,3 +15,7 @@ tools/live-bridge/test-results/
 tools/live-bridge/*.png
 participant.app/node_modules/
 participant.app/dist/
+cloudflared-participant.err.log
+cloudflared-participant.out.log
+participant.app/.env.production
+participant.app_backup_*/

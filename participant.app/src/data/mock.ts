@@ -1,4 +1,5 @@
 import coftTempLogo from "@/assets/brand/formice.png";
+import formiceHeadLogo from "@/assets/brand/formice-head.png";
 import vehicleHero from "@/assets/brand/urojinekoloji.jpg";
 import type {
   AppConfig,
@@ -27,7 +28,7 @@ const vehicleCompanyDefaults = {
 const sharedDriverTabs = [
   { key: "home", label: "Ana Sayfa", icon: "home", enabled: true, order: 1 },
   { key: "jobs", label: "Görevlerim", icon: "clipboard-list", enabled: true, order: 2 },
-  { key: "operations", label: "Operasyon", icon: "navigation", enabled: true, order: 3 },
+  { key: "operations", label: "Toplantı", icon: "navigation", enabled: true, order: 3 },
   { key: "notifications", label: "Bildirimler", icon: "bell", enabled: true, order: 4 },
   { key: "qr-checkin", label: "QR Okut", icon: "qr-code", enabled: true, order: 5 },
 ] as const;
@@ -40,11 +41,11 @@ const appConfigsByRole: Record<Role, AppConfig> = {
     tenant_id: "coft-travel",
     company_id: "coft-travel",
     customer_company_id: "micetro",
-    project_id: "antalya-vip",
+    project_id: "eskisehir-urojinekoloji-sempozyumu-2026",
     config_version: "2026.04.04-driver-01",
     branding: {
       source: "vehicle_company",
-      logo_url: coftTempLogo,
+      logo_url: formiceHeadLogo,
       hero_image_url: vehicleHero,
       primary_color: "#F28C28",
       base_color: "#102B64",
@@ -86,12 +87,12 @@ const appConfigsByRole: Record<Role, AppConfig> = {
       blocked_actions: ["admin_override", "policy_edit"],
     },
     content: {
-      app_title: "driver-greeter-aplication",
+      app_title: "ForMice Participant",
       home_title: "Ana Sayfa",
-      project_name: "Micetro İstanbul Zirvesi",
-      project_date_range: "12-15 Ekim 2026",
-      project_location: "İstanbul Kongre Merkezi",
-      project_qr_value: "PROJECT:micetro-istanbul-zirvesi-2026|PARTICIPANT:Serhat-OKSAK",
+      project_name: "Eskişehir Ürojinekoloji Sempozyumu",
+      project_date_range: "11-12 Nisan 2026",
+      project_location: "Park Dedeman Otel - ESKİŞEHİR",
+      project_qr_value: "PROJECT:eskisehir-urojinekoloji-sempozyumu-2026|PARTICIPANT:Serhat-OKSAK",
       empty_state_texts: {
         alerts: "Şuan herşey yolunda...",
         notifications: "Tüm bildirimleri okudunuz.",
@@ -116,11 +117,11 @@ const appConfigsByRole: Record<Role, AppConfig> = {
     tenant_id: "coft-travel",
     company_id: "coft-travel",
     customer_company_id: "micetro",
-    project_id: "antalya-vip",
+    project_id: "eskisehir-urojinekoloji-sempozyumu-2026",
     config_version: "2026.04.04-greeter-01",
     branding: {
       source: "vehicle_company",
-      logo_url: coftTempLogo,
+      logo_url: formiceHeadLogo,
       hero_image_url: vehicleHero,
       primary_color: "#F28C28",
       base_color: "#102B64",
@@ -162,12 +163,12 @@ const appConfigsByRole: Record<Role, AppConfig> = {
       blocked_actions: ["admin_override", "policy_edit"],
     },
     content: {
-      app_title: "driver-greeter-aplication",
+      app_title: "ForMice Participant",
       home_title: "Ana Sayfa",
-      project_name: "Micetro İstanbul Zirvesi",
-      project_date_range: "12-15 Ekim 2026",
-      project_location: "İstanbul Kongre Merkezi",
-      project_qr_value: "PROJECT:micetro-istanbul-zirvesi-2026|PARTICIPANT:Serhat-OKSAK",
+      project_name: "Eskişehir Ürojinekoloji Sempozyumu",
+      project_date_range: "11-12 Nisan 2026",
+      project_location: "Park Dedeman Otel - ESKİŞEHİR",
+      project_qr_value: "PROJECT:eskisehir-urojinekoloji-sempozyumu-2026|PARTICIPANT:Serhat-OKSAK",
       empty_state_texts: {
         alerts: "Şuan herşey yolunda...",
         notifications: "Tüm bildirimleri okudunuz.",

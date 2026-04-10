@@ -24,6 +24,75 @@ import {
 const bootstrapCache = new Map<Role, CoreBootstrapPayload>();
 const inflightBootstrapRequests = new Map<Role, Promise<CoreBootstrapPayload>>();
 
+function mergeBootstrapPayload(
+  role: Role,
+  remotePayload: Partial<CoreBootstrapPayload> | null | undefined,
+): CoreBootstrapPayload {
+  const mockPayload = getMockCoreBootstrap(role);
+  if (!remotePayload) {
+    return setBootstrapCache(role, mockPayload);
+  }
+
+  const mergedPayload: CoreBootstrapPayload = {
+    ...mockPayload,
+    ...remotePayload,
+    role,
+    appConfig: {
+      ...mockPayload.appConfig,
+      ...(remotePayload.appConfig || {}),
+      branding: {
+        ...mockPayload.appConfig.branding,
+        ...(remotePayload.appConfig?.branding || {}),
+      },
+      navigation: {
+        ...mockPayload.appConfig.navigation,
+        ...(remotePayload.appConfig?.navigation || {}),
+      },
+      modules: {
+        ...mockPayload.appConfig.modules,
+        ...(remotePayload.appConfig?.modules || {}),
+        shared_modules: {
+          ...mockPayload.appConfig.modules.shared_modules,
+          ...(remotePayload.appConfig?.modules?.shared_modules || {}),
+        },
+        company_modules: {
+          ...mockPayload.appConfig.modules.company_modules,
+          ...(remotePayload.appConfig?.modules?.company_modules || {}),
+        },
+        project_modules: {
+          ...mockPayload.appConfig.modules.project_modules,
+          ...(remotePayload.appConfig?.modules?.project_modules || {}),
+        },
+      },
+      role_visibility: {
+        ...mockPayload.appConfig.role_visibility,
+        ...(remotePayload.appConfig?.role_visibility || {}),
+      },
+      content: {
+        ...mockPayload.appConfig.content,
+        ...(remotePayload.appConfig?.content || {}),
+      },
+      policy_bundle: {
+        ...mockPayload.appConfig.policy_bundle,
+        ...(remotePayload.appConfig?.policy_bundle || {}),
+      },
+    },
+    shellProfile: {
+      ...mockPayload.shellProfile,
+      ...(remotePayload.shellProfile || {}),
+    },
+    operations: remotePayload.operations || mockPayload.operations,
+    jobsByDate: remotePayload.jobsByDate || mockPayload.jobsByDate,
+    expenses: remotePayload.expenses || mockPayload.expenses,
+    files: remotePayload.files || mockPayload.files,
+    dynamicQrPolicy: remotePayload.dynamicQrPolicy ?? mockPayload.dynamicQrPolicy,
+    qrResultVisibility: remotePayload.qrResultVisibility ?? mockPayload.qrResultVisibility,
+    syncedAt: remotePayload.syncedAt || mockPayload.syncedAt,
+  };
+
+  return setBootstrapCache(role, mergedPayload);
+}
+
 function getCoreApiUrl() {
   return import.meta.env.VITE_CORE_API_URL?.trim() || "";
 }
@@ -92,7 +161,7 @@ export async function loadCoreBootstrap(role: Role): Promise<CoreBootstrapPayloa
     try {
       if (canUseRemoteCore()) {
         const remotePayload = await fetchRemoteBootstrap(role);
-        return setBootstrapCache(role, remotePayload);
+        return mergeBootstrapPayload(role, remotePayload);
       }
     } catch (error) {
       console.warn("Core bootstrap fetch failed, falling back to mock data.", error);

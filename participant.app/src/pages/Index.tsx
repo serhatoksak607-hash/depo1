@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useMemo, useState } from "react";
+﻿import React, { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -16,6 +16,9 @@ import { HomeScreen } from "@/components/screens/HomeScreen";
 import { OperationsScreen } from "@/components/screens/OperationsScreen";
 import { JobsScreen } from "@/components/screens/JobsScreen";
 import brandFallbackLogo from "@/assets/brand/formice.png";
+import headerLogoOne from "@/assets/brand/logo-1-transparent.png";
+import headerLogoTwo from "@/assets/brand/logo-2.png";
+import toplantiCardIcon from "@/assets/brand/toplanti-card-transparent.png";
 import footerBanner from "@/assets/brand/footer2.png";
 import { toast } from "@/components/ui/sonner";
 import {
@@ -51,7 +54,7 @@ const alertItems = [
 
 const tabTitles: Record<TabKey, string> = {
   home: "Ana Sayfa",
-  operations: "Operasyon",
+  operations: "Toplantı",
   jobs: "Görevlerim",
   expenses: "Masraflar",
   files: "Dosyalarım",
@@ -74,7 +77,7 @@ const tabColorMap: Record<TabKey, string> = {
   expenses: "text-gold-500",
   files: "text-success",
   notifications: "text-coral-500",
-  "qr-checkin": "text-success",
+  "qr-checkin": "text-[#102B64]",
 };
 
 function formatBadgeCount(count: number): string | null {
@@ -137,13 +140,13 @@ function ScreenFallback({ role }: { role: Role }) {
 function buildProjectOptions(role: Role): ProjectSummary[] {
   const appConfig = getAppConfig(role);
   const primaryProject: ProjectSummary = {
-    id: appConfig.project_id || "micetro-istanbul-zirvesi",
-    name: appConfig.content.project_name || "Micetro İstanbul Zirvesi",
-    dateRange: appConfig.content.project_date_range || "12-15 Ekim 2026",
-    location: appConfig.content.project_location || "İstanbul Kongre Merkezi",
+    id: appConfig.project_id || "eskisehir-urojinekoloji-sempozyumu-2026",
+    name: appConfig.content.project_name || "Eskişehir Ürojinekoloji Sempozyumu",
+    dateRange: appConfig.content.project_date_range || "11-12 Nisan 2026",
+    location: appConfig.content.project_location || "Park Dedeman Otel - ESKİŞEHİR",
     qrValue:
       appConfig.content.project_qr_value ||
-      `PROJECT:${appConfig.project_id || "micetro-istanbul-zirvesi"}|ROLE:${role}|PERSON:Serhat-OKSAK`,
+      `PROJECT:${appConfig.project_id || "eskisehir-urojinekoloji-sempozyumu-2026"}|ROLE:${role}|PERSON:Serhat-OKSAK`,
   };
 
   return [
@@ -260,31 +263,57 @@ const Index = () => {
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col overflow-hidden bg-background">
       <header
-        className="flex-shrink-0 border-b border-white/10"
-        style={{ background: `linear-gradient(140deg, ${brandBg} 0%, #183B7E 52%, #19564D 100%)` }}
+        className="flex-shrink-0 border-b border-slate-300/70"
+        style={{
+          background:
+            "linear-gradient(124deg, #A66729 0%, #C99E5A 28%, #D9B47A 56%, #E2C08D 78%, #D0A84D 100%)",
+        }}
       >
-        <div className="flex h-[84px] items-center justify-center px-4">
+        <div className="grid h-[88px] grid-cols-[1fr_auto_1fr] items-center gap-2 overflow-hidden px-3 py-2">
+          <div className="flex items-center justify-start overflow-hidden">
+            <img
+              src={headerLogoOne}
+              alt="Logo 1"
+              className="h-full max-h-[57px] w-auto object-contain object-left"
+              width={81}
+              height={57}
+            />
+          </div>
           <img
-            src={headerLogo}
+            src={brandFallbackLogo}
             alt={appConfig.content.app_title || "Uygulama logosu"}
-            className="max-h-[58px] w-auto max-w-[220px] object-contain"
-            width={220}
-            height={58}
+            className="h-full max-h-[82px] w-auto max-w-none scale-[1.68] object-contain object-center"
+            width={496}
+            height={82}
           />
+          <div className="flex items-center justify-end overflow-hidden">
+            <img
+              src={headerLogoTwo}
+              alt="Logo 2"
+              className="h-full max-h-[82px] w-auto object-contain object-right"
+              width={116}
+              height={82}
+            />
+          </div>
         </div>
         {activeTab !== "home" && (
-          <div className="flex items-center justify-between px-4 pb-3">
+          <div
+            className="flex items-center justify-between border-t border-slate-100 px-4 pb-3 pt-3"
+            style={{ background: "linear-gradient(90deg, rgba(255,244,234,0.92) 0%, rgba(246,242,247,0.9) 35%, rgba(237,242,251,0.92) 70%, rgba(244,250,247,0.92) 100%)" }}
+          >
             <h1 className={`text-base font-bold uppercase tracking-[0.12em] ${tabColorMap[activeTab] ?? "text-primary-foreground"}`}>
               {tabTitles[activeTab]}
             </h1>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setRole(role === "driver" ? "greeter" : "driver")}
-                className="rounded-lg px-3 py-1.5 text-[10px] font-bold text-white"
-                style={{ backgroundColor: brandPrimary }}
-              >
-                {role === "driver" ? "Sürücü" : "Karşılamacı"}
-              </button>
+            <div className="flex items-center">
+              <div className="flex h-[52px] min-w-[132px] items-center justify-center rounded-xl border border-white/70 bg-white/78 px-3 shadow-[0_6px_18px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+                <img
+                  src={brandFallbackLogo}
+                  alt="Modül sponsoru"
+                  className="h-[42px] w-auto object-contain"
+                  width={126}
+                  height={42}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -483,12 +512,38 @@ const Index = () => {
                 onClick={() => handleTabChange(tab.key)}
                 className={`relative flex flex-1 flex-col items-center gap-1 rounded-2xl border px-1 py-2.5 transition-colors ${
                   isActive
-                    ? `border-current bg-current/10 shadow-[0_8px_18px_rgba(15,23,42,0.06)] ${tab.activeColor}`
+                    ? `shadow-[0_8px_18px_rgba(15,23,42,0.06)] ${tab.activeColor}`
                     : "border-transparent text-slate-500"
                 }`}
+                style={
+                  isActive && tab.key === "operations"
+                    ? {
+                        borderColor: "rgba(242,140,40,0.38)",
+                        backgroundColor: "rgba(254,244,234,0.96)",
+                      }
+                    : undefined
+                }
               >
                 <div className="relative">
-                  <tab.icon className={`h-5 w-5 ${isActive ? tab.activeColor : ""}`} />
+                  {tab.key === "operations" ? (
+                    <span
+                      aria-hidden="true"
+                      className="block h-5 w-5"
+                      style={{
+                        backgroundColor: isActive ? "#F28C28" : "#64748B",
+                        WebkitMaskImage: `url(${toplantiCardIcon})`,
+                        maskImage: `url(${toplantiCardIcon})`,
+                        WebkitMaskRepeat: "no-repeat",
+                        maskRepeat: "no-repeat",
+                        WebkitMaskPosition: "center",
+                        maskPosition: "center",
+                        WebkitMaskSize: "contain",
+                        maskSize: "contain",
+                      }}
+                    />
+                  ) : (
+                    <tab.icon className={`h-5 w-5 ${isActive ? tab.activeColor : ""}`} />
+                  )}
                   {tab.badge && (
                     <span className="absolute -top-1.5 -right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[8px] font-bold text-white">
                       {tab.badge}
@@ -519,3 +574,4 @@ const Index = () => {
 };
 
 export default Index;
+

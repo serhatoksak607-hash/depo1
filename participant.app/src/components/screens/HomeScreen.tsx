@@ -1,8 +1,9 @@
 import React from "react";
-import { Bell, ChevronDown, ExternalLink, FolderOpen, Navigation, QrCode, Receipt } from "lucide-react";
+import { Bell, ChevronDown, ExternalLink, FolderOpen, QrCode, Receipt } from "lucide-react";
 import type { AppConfig, ProjectSummary, Role, TabKey } from "@/data/types";
 import { formatPersonName } from "@/lib/utils";
 import { getShellProfile } from "@/services/core";
+import toplantiCardIcon from "@/assets/brand/toplanti-card-transparent.png";
 
 interface HomeScreenProps {
   onOpenTab: (tab: TabKey) => void;
@@ -31,6 +32,7 @@ export function HomeScreen({
   const heroImage = appConfig.branding.hero_image_url || "";
   const brandPrimary = appConfig.branding.primary_color || "#F28C28";
   const brandBase = appConfig.branding.base_color || "#102B64";
+  const qrAccent = "#102B64";
   const modules = appConfig.modules;
   const isModuleVisible = (moduleKey: string) =>
     modules.project_modules[moduleKey]?.visible ??
@@ -70,10 +72,9 @@ export function HomeScreen({
           <button
             type="button"
             onClick={onOpenProjectPicker}
-            className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate text-[10px] font-medium text-muted-foreground transition-opacity hover:opacity-80"
+            className="mt-0.5 inline-flex max-w-full items-center truncate text-[10px] font-medium text-muted-foreground transition-opacity hover:opacity-80"
           >
             <span className="truncate">{selectedProject.dateRange}</span>
-            <ChevronDown className="h-3 w-3 flex-shrink-0 text-muted-foreground/60" />
           </button>
           <a
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedProject.location)}`}
@@ -121,13 +122,13 @@ export function HomeScreen({
               className={`flex min-h-[118px] flex-col items-center justify-center gap-2 rounded-2xl border bg-card p-4 text-center transition-colors active:bg-secondary ${
                 !showNotifications ? "col-span-2" : ""
               }`}
-              style={{ borderColor: `${brandPrimary}33` }}
+              style={{ borderColor: `${qrAccent}33` }}
             >
               <div
                 className="flex h-14 w-14 items-center justify-center rounded-xl"
-                style={{ backgroundColor: `${brandPrimary}1A` }}
+                style={{ backgroundColor: `${qrAccent}1A` }}
               >
-                <QrCode className="h-6 w-6" style={{ color: brandPrimary }} />
+                <QrCode className="h-6 w-6" style={{ color: qrAccent }} />
               </div>
               <div>
                 <p className="text-sm font-bold text-foreground">QR Okut</p>
@@ -194,7 +195,21 @@ export function HomeScreen({
                 className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border"
                 style={{ borderColor: `${brandPrimary}4D`, backgroundColor: `${brandPrimary}1A` }}
               >
-                <Navigation className="h-6 w-6" style={{ color: brandPrimary }} />
+                <span
+                  aria-hidden="true"
+                  className="h-7 w-7"
+                  style={{
+                    backgroundColor: brandPrimary,
+                    WebkitMaskImage: `url(${toplantiCardIcon})`,
+                    maskImage: `url(${toplantiCardIcon})`,
+                    WebkitMaskRepeat: "no-repeat",
+                    maskRepeat: "no-repeat",
+                    WebkitMaskPosition: "center",
+                    maskPosition: "center",
+                    WebkitMaskSize: "contain",
+                    maskSize: "contain",
+                  }}
+                />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-primary-foreground">Toplantı</h2>
